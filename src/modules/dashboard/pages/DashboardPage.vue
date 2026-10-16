@@ -45,8 +45,9 @@
         v-if="!isCurrentMonth"
         @click="goToCurrentMonth"
         :disabled="loading"
-        class="ml-2 px-3 py-1.5 rounded-lg text-sm text-emerald-400 hover:bg-slate-800 transition disabled:opacity-50"
+        class="ml-2 inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 text-sm font-medium text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
+        <span aria-hidden="true">↺</span>
         Mês atual
       </button>
     </nav>
