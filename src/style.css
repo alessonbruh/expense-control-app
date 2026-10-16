@@ -1,18 +1,70 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 @import "apexcharts/dist/apexcharts.css";
 
+/* Tema escuro ativado pela classe .dark no <html> (ver useTheme) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tokens de cor do app. Os componentes usam só esses nomes
+ * (bg-card, text-ink, border-line...), e cada tema define os valores.
+ */
+@theme inline {
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-field: var(--field);
+  --color-hover: var(--hover);
+  --color-skeleton: var(--skeleton);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-negative: var(--negative);
+  --color-info: var(--info);
+}
+
+:root {
+  color-scheme: light;
+  --page: #f1f5f9; /* slate-100 */
+  --card: #ffffff;
+  --field: #ffffff;
+  --hover: #f1f5f9; /* slate-100 */
+  --skeleton: #e2e8f0; /* slate-200 */
+  --line: #e2e8f0; /* slate-200 */
+  --line-strong: #cbd5e1; /* slate-300 */
+  --ink: #0f172a; /* slate-900 */
+  --ink-soft: #334155; /* slate-700 */
+  --ink-muted: #64748b; /* slate-500 */
+  --accent: #047857; /* emerald-700 */
+  --negative: #b91c1c; /* red-700 */
+  --info: #0369a1; /* sky-700 */
+}
+
+:root.dark {
+  color-scheme: dark;
+  --page: #020617; /* slate-950 */
+  --card: #0f172a; /* slate-900 */
+  --field: #1e293b; /* slate-800 */
+  --hover: #1e293b; /* slate-800 */
+  --skeleton: #1e293b; /* slate-800 */
+  --line: #1e293b; /* slate-800 */
+  --line-strong: #475569; /* slate-600 */
+  --ink: #f1f5f9; /* slate-100 */
+  --ink-soft: #cbd5e1; /* slate-300 */
+  --ink-muted: #94a3b8; /* slate-400 */
+  --accent: #34d399; /* emerald-400 */
+  --negative: #f87171; /* red-400 */
+  --info: #38bdf8; /* sky-400 */
+}
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: #f1f5f9; /* slate-100 */
-  background-color: #020617; /* slate-950 */
+  color: var(--ink);
+  background-color: var(--page);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
