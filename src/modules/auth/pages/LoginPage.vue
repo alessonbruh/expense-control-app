@@ -1,19 +1,21 @@
 <template>
-  <div class="flex h-screen">
+  <div class="relative flex h-screen">
+    <ThemeToggle class="absolute top-4 right-4 z-10" />
+
     <!-- Lado direito (formulário de login) -->
     <div
-      class="w-full flex items-center justify-center px-4 bg-slate-950 bg-login-side"
+      class="w-full flex items-center justify-center px-4 bg-page bg-login-side"
     >
       <div
-        class="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl shadow-xl p-6 sm:p-10"
+        class="w-full max-w-md bg-card/95 border border-line rounded-2xl shadow-xl p-6 sm:p-10"
       >
-        <h2 class="text-3xl font-semibold text-center text-slate-100 mb-8">
+        <h2 class="text-3xl font-semibold text-center text-ink mb-8">
           Acessar Conta
         </h2>
 
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div>
-            <label for="email" class="block text-sm font-medium text-slate-300"
+            <label for="email" class="block text-sm font-medium text-ink-soft"
               >E-mail</label
             >
             <input
@@ -22,14 +24,14 @@
               id="email"
               placeholder="seu@email.com"
               required
-              class="w-full mt-1 px-4 py-3 bg-slate-800 border border-slate-600 text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              class="w-full mt-1 px-4 py-3 bg-field border border-line-strong text-ink rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
 
           <div class="relative">
             <label
               for="password"
-              class="block text-sm font-medium text-slate-300"
+              class="block text-sm font-medium text-ink-soft"
               >Senha</label
             >
             <input
@@ -38,13 +40,13 @@
               id="password"
               placeholder="••••••••"
               required
-              class="w-full mt-1 px-4 py-3 pr-10 bg-slate-800 border border-slate-600 text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              class="w-full mt-1 px-4 py-3 pr-10 bg-field border border-line-strong text-ink rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
             <button
               type="button"
               @click="togglePassword"
               :aria-label="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
-              class="absolute right-2 top-1/2 transform -translate-y-0 text-slate-400 hover:text-slate-100"
+              class="absolute right-2 top-1/2 transform -translate-y-0 text-ink-muted hover:text-ink"
             >
               <span v-if="showPassword">🙈</span>
               <span v-else>👁️</span>
@@ -57,9 +59,9 @@
                 type="checkbox"
                 class="h-4 w-4 accent-emerald-500 rounded"
               />
-              <span class="ml-2 text-slate-300">Lembrar-me</span>
+              <span class="ml-2 text-ink-soft">Lembrar-me</span>
             </label>
-            <a href="#" class="text-emerald-400 hover:underline"
+            <a href="#" class="text-accent hover:underline"
               >Esqueceu a senha?</a
             >
           </div>
@@ -74,9 +76,9 @@
           </button>
         </form>
 
-        <p class="text-center text-sm text-slate-400 mt-6">
+        <p class="text-center text-sm text-ink-muted mt-6">
           Não tem uma conta?
-          <a href="#" class="text-emerald-400 hover:underline">Cadastre-se</a>
+          <a href="#" class="text-accent hover:underline">Cadastre-se</a>
         </p>
       </div>
     </div>
@@ -88,6 +90,7 @@ import { ref } from 'vue';
 import { AuthService } from '../services/authService';
 import { useRouter } from 'vue-router';
 import { useToast } from '../../../composables/useToast';
+import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 
 const router = useRouter();
 const toast = useToast();
