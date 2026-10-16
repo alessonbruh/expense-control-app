@@ -6,6 +6,8 @@ import type {
   UpdateExpensePayload,
 } from '../modules/expense/dto/ExpenseDTO';
 
+import { getToken } from '../shared/auth/session';
+
 const service = new ExpenseService();
 
 export function useTransactions() {
@@ -14,19 +16,19 @@ export function useTransactions() {
   async function createTransaction(
     payload: CreateExpensePayload,
   ): Promise<ExpenseDTO> {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     return service.createExpense(payload, token);
   }
 
   async function updateTransaction(
     payload: UpdateExpensePayload,
   ): Promise<ExpenseDTO> {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     return service.updateExpense(payload, token);
   }
 
   async function getTransactionsByDate(start: string, end: string) {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     return service.getExpenseByDate(start, end, token);
   }
 

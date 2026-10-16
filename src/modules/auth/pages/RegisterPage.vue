@@ -143,6 +143,7 @@ import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { AuthService, PASSWORD_MIN_LENGTH } from '../services/authService';
 import { useToast } from '../../../composables/useToast';
+import { setToken } from '../../../shared/auth/session';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 
 type Field = 'name' | 'email' | 'password' | 'confirmPassword';
@@ -235,7 +236,7 @@ async function handleRegister() {
       email: form.email,
       password: form.password,
     });
-    localStorage.setItem('token', data.token);
+    setToken(data.token);
     toast.success(`Conta criada! Bem-vindo(a), ${data.user.name}.`);
     router.push('/dashboard');
   } catch {

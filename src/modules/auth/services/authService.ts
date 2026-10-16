@@ -46,6 +46,21 @@ export class AuthService {
     }
   }
 
+  async logout(token: string, allDevices = false): Promise<void> {
+    const response = await fetch(
+      `${this.baseUrl}/${allDevices ? 'logout-all' : 'logout'}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (!response.ok && response.status !== 401) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.message || 'Erro ao sair da conta');
+    }
+  }
+
   async register(data: RegisterData): Promise<{ message: string }> {
     try {
       const response = await fetch(this.baseUrl, {

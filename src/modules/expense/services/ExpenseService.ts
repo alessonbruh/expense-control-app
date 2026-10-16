@@ -5,6 +5,7 @@ import type {
   SaveExpenseResponse,
 } from '../dto/ExpenseDTO';
 import type { ExpenseResponseDTO } from '../dto/ExpenseResponseDTO';
+import { expireSession } from '../../../shared/auth/session';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -28,6 +29,7 @@ export class ExpenseService {
       });
       const result = await response.json();
 
+      if (response.status === 401) expireSession();
       if (!response.ok)
         throw new Error(result.message || 'Erro ao processar requisição');
       return result as T;
