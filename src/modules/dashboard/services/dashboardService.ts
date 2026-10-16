@@ -12,7 +12,7 @@ export class DashboardService {
   ): Promise<ExpenseResponseDTO[]> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/${initialDate}/$${finalDate}`,
+        `${this.baseUrl}/${initialDate}/${finalDate}`,
         {
           method: 'GET',
           headers: {
