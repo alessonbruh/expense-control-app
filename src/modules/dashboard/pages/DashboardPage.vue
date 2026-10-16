@@ -17,6 +17,30 @@
         >
           + Novo Lançamento
         </button>
+        <button
+          type="button"
+          @click="logout()"
+          :disabled="loggingOut"
+          title="Sair da conta"
+          class="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-line-strong bg-card px-3 text-sm font-medium text-ink-soft hover:border-red-500/60 hover:text-negative focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-4 w-4"
+            aria-hidden="true"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="M16 17l5-5-5-5" />
+            <path d="M21 12H9" />
+          </svg>
+          {{ loggingOut ? 'Saindo...' : 'Sair' }}
+        </button>
       </div>
     </header>
 
@@ -112,6 +136,7 @@ import ExpenseForm from '../../../components/transactions/ExpenseForm.vue';
 import { useTransactions } from '../../../composables/useTransactions';
 import { useToast } from '../../../composables/useToast';
 import { useTheme } from '../../../composables/useTheme';
+import { useAuth } from '../../../composables/useAuth';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 import {
   addMonths,
@@ -125,6 +150,7 @@ import { formatCurrency } from '../../../shared/utils/format';
 const { getTransactionsByDate } = useTransactions();
 const toast = useToast();
 const { isDark } = useTheme();
+const { logout, loggingOut } = useAuth();
 
 const openModal = ref(false);
 const loading = ref(true);

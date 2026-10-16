@@ -92,6 +92,7 @@ import { ref } from 'vue';
 import { AuthService } from '../services/authService';
 import { useRouter } from 'vue-router';
 import { useToast } from '../../../composables/useToast';
+import { setToken } from '../../../shared/auth/session';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 
 const router = useRouter();
@@ -111,7 +112,7 @@ async function handleLogin() {
       password: password.value,
     });
 
-    localStorage.setItem('token', data.token);
+    setToken(data.token);
     router.push('/dashboard');
   } catch (err: any) {
     toast.error(err.message || 'Erro ao entrar.');

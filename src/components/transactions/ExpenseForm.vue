@@ -158,6 +158,7 @@ import { CategoryService } from '../../modules/category/services/categoryService
 import type { CategoryResponseDTO } from '../../modules/category/dtos/CategoryResponseDTO';
 import { ExpenseService } from '../../modules/expense/services/ExpenseService';
 import { useToast } from '../../composables/useToast';
+import { getToken } from '../../shared/auth/session';
 import {
   PaymentMethod,
   paymentMethodLabels,
@@ -168,7 +169,7 @@ import { formatCurrency } from '../../shared/utils/format';
 const categoryService = new CategoryService();
 const expenseService = new ExpenseService();
 const props = defineProps<{ initial?: Partial<ExpenseDTO> }>();
-const token = localStorage.getItem('token');
+const token = getToken();
 const categories = ref<CategoryResponseDTO[]>([]);
 const paymentMethods = Object.values(PaymentMethod).map(method => ({
   value: method,

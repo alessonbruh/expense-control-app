@@ -1,4 +1,5 @@
 import type { CategoryResponseDTO } from '../dtos/CategoryResponseDTO';
+import { expireSession } from '../../../shared/auth/session';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -16,6 +17,7 @@ export class CategoryService {
       });
       const result = await response.json();
 
+      if (response.status === 401) expireSession();
       if (!response.ok)
         throw new Error(result.message || 'Erro ao buscar dados');
       return result as CategoryResponseDTO[];

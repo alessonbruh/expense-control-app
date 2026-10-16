@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginPage from '../modules/auth/pages/LoginPage.vue';
 import RegisterPage from '../modules/auth/pages/RegisterPage.vue';
 import DashboardPage from '../modules/dashboard/pages/DashboardPage.vue';
+import { getToken } from '../shared/auth/session';
 
 const routes = [
   {
@@ -22,7 +23,7 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardPage,
-    // meta: { requiresAuth: true },
+    meta: { requiresAuth: true },
   },
 ];
 
@@ -32,9 +33,7 @@ const router = createRouter({
 });
 
 router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('token');
-
-  if (to.meta.requiresAuth && !token) {
+  if (to.meta.requiresAuth && !getToken()) {
     next('/auth');
   } else {
     next();
