@@ -1,20 +1,23 @@
 <template>
-  <div class="min-h-screen p-4 sm:p-6 bg-slate-950 text-slate-100">
+  <div class="min-h-screen p-4 sm:p-6 bg-page text-ink">
     <!-- Header -->
     <header
       class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
     >
       <div>
         <h1 class="text-3xl font-bold">Dashboard</h1>
-        <p class="text-slate-400">Bem-vindo ao seu painel de controle!</p>
+        <p class="text-ink-muted">Bem-vindo ao seu painel de controle!</p>
       </div>
 
-      <button
-        @click="openModal = true"
-        class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
-      >
-        + Novo Lançamento
-      </button>
+      <div class="flex items-center gap-2">
+        <ThemeToggle />
+        <button
+          @click="openModal = true"
+          class="h-9 px-4 cursor-pointer rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
+        >
+          + Novo Lançamento
+        </button>
+      </div>
     </header>
 
     <!-- Navegação por mês -->
@@ -23,7 +26,7 @@
         @click="changeMonth(-1)"
         :disabled="loading"
         aria-label="Mês anterior"
-        class="h-9 w-9 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition disabled:opacity-50"
+        class="h-9 w-9 rounded-lg cursor-pointer border border-line-strong text-ink-soft hover:bg-hover transition disabled:opacity-50"
       >
         ←
       </button>
@@ -36,7 +39,7 @@
         @click="changeMonth(1)"
         :disabled="loading"
         aria-label="Próximo mês"
-        class="h-9 w-9 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition disabled:opacity-50"
+        class="h-9 w-9 rounded-lg cursor-pointer border border-line-strong text-ink-soft hover:bg-hover transition disabled:opacity-50"
       >
         →
       </button>
@@ -45,7 +48,7 @@
         v-if="!isCurrentMonth"
         @click="goToCurrentMonth"
         :disabled="loading"
-        class="ml-2 inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 text-sm font-medium text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        class="ml-2 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 text-sm font-medium text-accent hover:bg-emerald-500/20 hover:border-emerald-500/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span aria-hidden="true">↺</span>
         Mês atual
@@ -57,12 +60,12 @@
       <div
         v-for="card in cards"
         :key="card.label"
-        class="bg-slate-900 border border-slate-800 rounded-xl p-4"
+        class="bg-card border border-line rounded-xl p-4"
       >
-        <h2 class="text-slate-400 text-sm">{{ card.label }}</h2>
+        <h2 class="text-ink-muted text-sm">{{ card.label }}</h2>
         <div
           v-if="loading"
-          class="mt-2 h-8 w-32 rounded bg-slate-800 animate-pulse"
+          class="mt-2 h-8 w-32 rounded bg-skeleton animate-pulse"
         ></div>
         <p v-else :class="card.color" class="text-2xl font-semibold">
           {{ formatCurrency(card.value) }}
@@ -73,16 +76,16 @@
     <!-- Gráficos -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Gráfico de pizza -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+      <div class="bg-card border border-line rounded-xl p-4">
         <h2 class="font-semibold mb-4">Distribuição de Despesas do Mês</h2>
 
         <div
           v-if="loading"
-          class="mx-auto h-[300px] w-[300px] max-w-full rounded-full bg-slate-800 animate-pulse"
+          class="mx-auto h-[300px] w-[300px] max-w-full rounded-full bg-skeleton animate-pulse"
         ></div>
         <p
           v-else-if="pieSeries.length === 0"
-          class="flex h-[300px] items-center justify-center text-slate-500"
+          class="flex h-[300px] items-center justify-center text-ink-muted"
         >
           Nenhuma despesa neste mês.
         </p>
@@ -108,6 +111,8 @@ import Modal from '../../../components/ui/Modal.vue';
 import ExpenseForm from '../../../components/transactions/ExpenseForm.vue';
 import { useTransactions } from '../../../composables/useTransactions';
 import { useToast } from '../../../composables/useToast';
+import { useTheme } from '../../../composables/useTheme';
+import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 import {
   addMonths,
   formatMonthLabel,
@@ -119,6 +124,7 @@ import { formatCurrency } from '../../../shared/utils/format';
 
 const { getTransactionsByDate } = useTransactions();
 const toast = useToast();
+const { isDark } = useTheme();
 
 const openModal = ref(false);
 const loading = ref(true);
@@ -129,18 +135,83 @@ const balance = computed(() => incomeTotal.value - expenseTotal.value);
 
 const labelsChartExpense = ref<string[]>([]);
 const pieSeries = ref<number[]>([]);
+const hasOthersSlice = ref(false);
+
+// Paleta categórica com um tom por tema, validada contra o card de cada um:
+// as cores continuam distinguíveis para daltônicos e a % fica legível.
+// A ordem importa (cores vizinhas foram validadas em pares), não reordene.
+const CHART_THEME = {
+  light: {
+    colors: [
+      '#2a78d6', // azul
+      '#eb6834', // laranja
+      '#1baf7a', // verde-água
+      '#eda100', // amarelo
+      '#e87ba4', // magenta
+      '#008300', // verde
+      '#6250d6', // violeta
+    ],
+    card: '#ffffff',
+    text: '#334155', // ink-soft
+    muted: '#64748b', // ink-muted
+  },
+  dark: {
+    colors: [
+      '#3987e5', // azul
+      '#d95926', // laranja
+      '#199e70', // verde-água
+      '#c98500', // amarelo
+      '#d55181', // magenta
+      '#008300', // verde
+      '#9085e9', // violeta
+    ],
+    card: '#0f172a', // slate-900
+    text: '#cbd5e1', // ink-soft
+    muted: '#94a3b8', // ink-muted
+  },
+};
+const OTHERS_COLOR = '#64748b'; // slate-500, neutro para "Outros" nos dois temas
+const MAX_SLICES = CHART_THEME.light.colors.length;
+const DARK_LABEL = '#0f172a'; // slate-900
+
+const chartTheme = computed(() =>
+  isDark.value ? CHART_THEME.dark : CHART_THEME.light,
+);
+
+// Escolhe texto branco ou escuro, o que tiver mais contraste com a fatia
+function relativeLuminance(hex: string) {
+  const [r, g, b] = [1, 3, 5].map(i => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function labelColorFor(hex: string) {
+  const l = relativeLuminance(hex);
+  const contrastWhite = 1.05 / (l + 0.05);
+  const contrastDark = (l + 0.05) / (relativeLuminance(DARK_LABEL) + 0.05);
+  return contrastWhite >= contrastDark ? '#ffffff' : DARK_LABEL;
+}
+
+const sliceColors = computed(() => {
+  const coloredSlices = pieSeries.value.length - (hasOthersSlice.value ? 1 : 0);
+  const colors = chartTheme.value.colors.slice(0, coloredSlices);
+  if (hasOthersSlice.value) colors.push(OTHERS_COLOR);
+  return colors;
+});
 
 const isCurrentMonth = computed(() =>
   isSameMonth(selectedMonth.value, new Date()),
 );
 
 const cards = computed(() => [
-  { label: 'Receitas', value: incomeTotal.value, color: 'text-emerald-400' },
-  { label: 'Despesas', value: expenseTotal.value, color: 'text-red-400' },
+  { label: 'Receitas', value: incomeTotal.value, color: 'text-accent' },
+  { label: 'Despesas', value: expenseTotal.value, color: 'text-negative' },
   {
     label: 'Saldo',
     value: balance.value,
-    color: balance.value < 0 ? 'text-red-400' : 'text-sky-400',
+    color: balance.value < 0 ? 'text-negative' : 'text-info',
   },
 ]);
 
@@ -189,8 +260,17 @@ async function loadDashboard() {
     expenseTotal.value = expenses;
     incomeTotal.value = incomes;
 
-    labelsChartExpense.value = Object.keys(expenseMap);
-    pieSeries.value = Object.values(expenseMap);
+    // Maiores primeiro; acima de MAX_SLICES categorias, o resto vira "Outros"
+    const sorted = Object.entries(expenseMap).sort((a, b) => b[1] - a[1]);
+    const slices = sorted.slice(0, MAX_SLICES);
+    const rest = sorted.slice(MAX_SLICES);
+    if (rest.length) {
+      slices.push(['Outros', rest.reduce((sum, [, value]) => sum + value, 0)]);
+    }
+
+    labelsChartExpense.value = slices.map(([name]) => name);
+    pieSeries.value = slices.map(([, value]) => value);
+    hasOthersSlice.value = rest.length > 0;
   } catch (err: any) {
     console.error(err);
     toast.error(err.message || 'Erro ao carregar o dashboard.');
@@ -206,12 +286,49 @@ async function onTransactionSaved() {
 
 const pieOptions = computed(() => ({
   labels: labelsChartExpense.value,
+  colors: sliceColors.value,
   chart: { background: 'transparent', foreColor: '#cbd5e1' },
-  theme: { mode: 'dark' },
-  stroke: { colors: ['#0f172a'] }, // slate-900, mesma cor do card
-  legend: { position: 'bottom' },
+  theme: { mode: isDark.value ? 'dark' : 'light' },
+  // Separação de 2px na cor do card entre as fatias
+  stroke: { width: 2, colors: [chartTheme.value.card] },
+  legend: {
+    position: 'bottom',
+    labels: { colors: chartTheme.value.text },
+    markers: { strokeWidth: 0 },
+  },
   tooltip: { y: { formatter: formatCurrency } },
-  dataLabels: { dropShadow: { enabled: false } },
+  dataLabels: {
+    enabled: true,
+    formatter: (value: number) => `${Math.round(value)}%`,
+    style: {
+      fontSize: '13px',
+      fontWeight: 600,
+      colors: sliceColors.value.map(labelColorFor),
+    },
+    dropShadow: { enabled: false },
+  },
+  plotOptions: {
+    pie: {
+      // Fatias muito finas não comportam o texto; o valor fica no tooltip
+      dataLabels: { minAngleToShowLabel: 12 },
+      donut: {
+        size: '58%',
+        labels: {
+          show: true,
+          value: {
+            color: isDark.value ? '#f1f5f9' : '#0f172a', // ink
+            formatter: (v: string) => formatCurrency(Number(v)),
+          },
+          total: {
+            show: true,
+            label: 'Total',
+            color: chartTheme.value.muted,
+            formatter: () => formatCurrency(expenseTotal.value),
+          },
+        },
+      },
+    },
+  },
 }));
 </script>
 
