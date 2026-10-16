@@ -1,51 +1,92 @@
 <template>
-  <div class="min-h-screen p-6 bg-gray-100 dark:bg-gray-900">
+  <div class="min-h-screen p-4 sm:p-6 bg-slate-950 text-slate-100">
     <!-- Header -->
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-200">
-        Dashboard
-      </h1>
-      <p class="text-gray-500 dark:text-gray-200">
-        Bem-vindo ao seu painel de controle!
-      </p>
+    <header
+      class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div>
+        <h1 class="text-3xl font-bold">Dashboard</h1>
+        <p class="text-slate-400">Bem-vindo ao seu painel de controle!</p>
+      </div>
+
       <button
         @click="openModal = true"
-        class="px-4 py-2 bg-blue-600 text-white rounded"
+        class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
       >
         + Novo Lançamento
       </button>
     </header>
 
+    <!-- Navegação por mês -->
+    <nav class="mb-6 flex items-center gap-2" aria-label="Selecionar mês">
+      <button
+        @click="changeMonth(-1)"
+        :disabled="loading"
+        aria-label="Mês anterior"
+        class="h-9 w-9 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition disabled:opacity-50"
+      >
+        ←
+      </button>
+
+      <span class="min-w-44 text-center text-lg font-semibold">
+        {{ formatMonthLabel(selectedMonth) }}
+      </span>
+
+      <button
+        @click="changeMonth(1)"
+        :disabled="loading"
+        aria-label="Próximo mês"
+        class="h-9 w-9 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition disabled:opacity-50"
+      >
+        →
+      </button>
+
+      <button
+        v-if="!isCurrentMonth"
+        @click="goToCurrentMonth"
+        :disabled="loading"
+        class="ml-2 px-3 py-1.5 rounded-lg text-sm text-emerald-400 hover:bg-slate-800 transition disabled:opacity-50"
+      >
+        Mês atual
+      </button>
+    </nav>
+
     <!-- Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <div class="bg-white dark:bg-gray-600 rounded-lg shadow p-4">
-        <h2 class="text-gray-500 dark:text-gray-200 text-sm">Receitas</h2>
-        <p class="text-2xl font-semibold text-green-500">
-          R$ {{ incomeTotal.toFixed(2) }}
-        </p>
-      </div>
-      <div class="bg-white dark:bg-gray-600 rounded-lg shadow p-4">
-        <h2 class="text-gray-500 dark:text-gray-200 text-sm">Despesas</h2>
-        <p class="text-2xl font-semibold text-red-500">
-          R$ {{ expenseTotal.toFixed(2) }}
-        </p>
-      </div>
-      <div class="bg-white dark:bg-gray-600 rounded-lg shadow p-4">
-        <h2 class="text-gray-500 dark:text-gray-200 text-sm">Saldo</h2>
-        <p class="text-2xl font-semibold text-blue-500">
-          R$ {{ balance.toFixed(2) }}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div
+        v-for="card in cards"
+        :key="card.label"
+        class="bg-slate-900 border border-slate-800 rounded-xl p-4"
+      >
+        <h2 class="text-slate-400 text-sm">{{ card.label }}</h2>
+        <div
+          v-if="loading"
+          class="mt-2 h-8 w-32 rounded bg-slate-800 animate-pulse"
+        ></div>
+        <p v-else :class="card.color" class="text-2xl font-semibold">
+          {{ formatCurrency(card.value) }}
         </p>
       </div>
     </div>
 
     <!-- Gráficos -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-1">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Gráfico de pizza -->
-      <div class="bg-white dark:bg-gray-600 rounded-lg shadow p-4">
-        <h2 class="text-gray-800 dark:text-gray-200 font-semibold mb-4">
-          Distribuição de Despesas do Mês
-        </h2>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <h2 class="font-semibold mb-4">Distribuição de Despesas do Mês</h2>
+
+        <div
+          v-if="loading"
+          class="mx-auto h-[300px] w-[300px] max-w-full rounded-full bg-slate-800 animate-pulse"
+        ></div>
+        <p
+          v-else-if="pieSeries.length === 0"
+          class="flex h-[300px] items-center justify-center text-slate-500"
+        >
+          Nenhuma despesa neste mês.
+        </p>
         <apexchart
+          v-else
           type="donut"
           height="300"
           :options="pieOptions"
@@ -53,6 +94,7 @@
         />
       </div>
     </div>
+
     <Modal v-model="openModal" title="Novo Lançamento">
       <ExpenseForm @saved="onTransactionSaved" @cancel="openModal = false" />
     </Modal>
@@ -60,51 +102,70 @@
 </template>
 
 <script setup lang="ts">
-// seus imports e estados existentes...
 import { computed, onBeforeMount, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import Modal from '../../../components/ui/Modal.vue';
 import ExpenseForm from '../../../components/transactions/ExpenseForm.vue';
-import { DashboardService } from '../services/dashboardService';
-import type { ExpenseResponseDTO } from '../dtos/ExpenseResponseDTO';
+import { useTransactions } from '../../../composables/useTransactions';
+import { useToast } from '../../../composables/useToast';
+import {
+  addMonths,
+  formatMonthLabel,
+  getMonthRange,
+  isSameMonth,
+  startOfMonth,
+} from '../../../shared/utils/date';
+import { formatCurrency } from '../../../shared/utils/format';
+
+const { getTransactionsByDate } = useTransactions();
+const toast = useToast();
 
 const openModal = ref(false);
-const dashboardService = new DashboardService();
 const loading = ref(true);
-const token = localStorage.getItem('token');
-let data = ref<ExpenseResponseDTO[]>([]);
+const selectedMonth = ref(startOfMonth(new Date()));
 const expenseTotal = ref(0);
 const incomeTotal = ref(0);
-const balance = ref(0);
+const balance = computed(() => incomeTotal.value - expenseTotal.value);
 
 const labelsChartExpense = ref<string[]>([]);
 const pieSeries = ref<number[]>([]);
 
+const isCurrentMonth = computed(() =>
+  isSameMonth(selectedMonth.value, new Date()),
+);
+
+const cards = computed(() => [
+  { label: 'Receitas', value: incomeTotal.value, color: 'text-emerald-400' },
+  { label: 'Despesas', value: expenseTotal.value, color: 'text-red-400' },
+  {
+    label: 'Saldo',
+    value: balance.value,
+    color: balance.value < 0 ? 'text-red-400' : 'text-sky-400',
+  },
+]);
+
 onBeforeMount(loadDashboard);
+
+function changeMonth(months: number) {
+  selectedMonth.value = addMonths(selectedMonth.value, months);
+  loadDashboard();
+}
+
+function goToCurrentMonth() {
+  selectedMonth.value = startOfMonth(new Date());
+  loadDashboard();
+}
 
 async function loadDashboard() {
   loading.value = true;
   try {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
-
-    const startDate = formatDate(firstDay);
-    const endDate = formatDate(lastDay);
-    const response = await dashboardService.getExpenseByDate(
-      startDate || '',
-      endDate || '',
-      token,
-    );
-
-    data.value = response;
+    const { start, end } = getMonthRange(selectedMonth.value);
+    const response = await getTransactionsByDate(start, end);
 
     const expenseMap: Record<string, number> = {};
     let expenses = 0;
     let incomes = 0;
 
-    for (const item of data.value) {
+    for (const item of response) {
       // A API retorna só as parcelas com vencimento no período,
       // então o valor do mês é a soma delas (e não o total do lançamento).
       const amount = item.installments.reduce(
@@ -126,13 +187,12 @@ async function loadDashboard() {
 
     expenseTotal.value = expenses;
     incomeTotal.value = incomes;
-    balance.value = incomes - expenses;
 
     labelsChartExpense.value = Object.keys(expenseMap);
     pieSeries.value = Object.values(expenseMap);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    // router.push('/erro');
+    toast.error(err.message || 'Erro ao carregar o dashboard.');
   } finally {
     loading.value = false;
   }
@@ -143,18 +203,14 @@ async function onTransactionSaved() {
   await loadDashboard();
 }
 
-const router = useRouter();
-const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
 const pieOptions = computed(() => ({
   labels: labelsChartExpense.value,
-  colors: [],
-  legend: {
-    labels: {
-      colors: isDark ? '#FFFFFF' : '#1F2937',
-    },
-    position: 'bottom',
-  },
+  chart: { background: 'transparent', foreColor: '#cbd5e1' },
+  theme: { mode: 'dark' },
+  stroke: { colors: ['#0f172a'] }, // slate-900, mesma cor do card
+  legend: { position: 'bottom' },
+  tooltip: { y: { formatter: formatCurrency } },
+  dataLabels: { dropShadow: { enabled: false } },
 }));
 </script>
 
@@ -167,5 +223,3 @@ export default {
   },
 };
 </script>
-
-<style scoped></style>

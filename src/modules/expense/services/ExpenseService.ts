@@ -4,7 +4,7 @@ import type {
   UpdateExpensePayload,
   SaveExpenseResponse,
 } from '../dto/ExpenseDTO';
-import type { ExpenseResponseDTO } from '../../dashboard/dtos/ExpenseResponseDTO';
+import type { ExpenseResponseDTO } from '../dto/ExpenseResponseDTO';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

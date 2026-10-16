@@ -5,23 +5,23 @@
       class="fixed inset-0 z-50 flex items-center justify-center"
     >
       <div
-        class="fixed inset-0 bg-black/50"
+        class="fixed inset-0 bg-black/60"
         @click="close"
         aria-hidden="true"
       ></div>
 
       <div
         :class="modalSizeClass"
-        class="relative bg-white dark:bg-gray-800 rounded-lg p-6 mx-4 z-50 shadow-lg"
+        class="relative bg-slate-900 border border-slate-800 text-slate-100 rounded-xl p-6 mx-4 z-50 shadow-xl"
       >
         <header class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 class="text-lg font-semibold text-slate-100">
             {{ title }}
           </h3>
           <button
             @click="close"
             aria-label="Fechar"
-            class="text-gray-500 hover:text-gray-700 dark:hover:text-white"
+            class="text-slate-400 hover:text-slate-100"
           >
             ✕
           </button>
