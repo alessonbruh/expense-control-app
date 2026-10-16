@@ -79,9 +79,11 @@ const balance = ref(0);
 
 const labelsChartExpense = ref<string[]>([]);
 const pieSeries = ref<number[]>([]);
-const expenseMap: Record<string, number> = {};
 
-onBeforeMount(async () => {
+onBeforeMount(loadDashboard);
+
+async function loadDashboard() {
+  loading.value = true;
   try {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -98,23 +100,33 @@ onBeforeMount(async () => {
 
     data.value = response;
 
+    const expenseMap: Record<string, number> = {};
+    let expenses = 0;
+    let incomes = 0;
+
     for (const item of data.value) {
-      const amount = Number(item.amount);
+      // A API retorna só as parcelas com vencimento no período,
+      // então o valor do mês é a soma delas (e não o total do lançamento).
+      const amount = item.installments.reduce(
+        (sum, installment) =>
+          installment.status === 'CANCELED'
+            ? sum
+            : sum + Number(installment.amount),
+        0,
+      );
 
       if (item.category.type === 'expense') {
-        expenseTotal.value += amount;
-
-        if (expenseMap[item.category.name]) {
-          expenseMap[item.category.name] += amount;
-        } else {
-          expenseMap[item.category.name] = amount;
-        }
+        expenses += amount;
+        expenseMap[item.category.name] =
+          (expenseMap[item.category.name] ?? 0) + amount;
       } else {
-        incomeTotal.value += amount;
+        incomes += amount;
       }
     }
 
-    balance.value = incomeTotal.value - expenseTotal.value;
+    expenseTotal.value = expenses;
+    incomeTotal.value = incomes;
+    balance.value = incomes - expenses;
 
     labelsChartExpense.value = Object.keys(expenseMap);
     pieSeries.value = Object.values(expenseMap);
@@ -124,10 +136,11 @@ onBeforeMount(async () => {
   } finally {
     loading.value = false;
   }
-});
+}
 
 async function onTransactionSaved() {
   openModal.value = false;
+  await loadDashboard();
 }
 
 const router = useRouter();
