@@ -1,6 +1,12 @@
+import type { InstallmentDTO } from '../../expense/dto/ExpenseDTO';
+
+// A busca por período retorna apenas as parcelas com vencimento no período.
 export interface ExpenseResponseDTO {
-  amount: number;
+  id: string;
+  description: string;
+  amount: number | string;
   category: CategoryDTO;
+  installments: InstallmentDTO[];
 }
 
 export interface CategoryDTO {
