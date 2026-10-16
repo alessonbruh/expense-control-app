@@ -78,7 +78,9 @@
 
         <p class="text-center text-sm text-ink-muted mt-6">
           Não tem uma conta?
-          <a href="#" class="text-accent hover:underline">Cadastre-se</a>
+          <router-link to="/register" class="text-accent hover:underline"
+            >Cadastre-se</router-link
+          >
         </p>
       </div>
     </div>
