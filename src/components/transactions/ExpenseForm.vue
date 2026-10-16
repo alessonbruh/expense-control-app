@@ -75,9 +75,18 @@
 
       <select
         v-model="form.categoryId"
-        class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        :disabled="loadingCategories"
+        class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
       >
-        <option value="" disabled>Selecione uma categoria</option>
+        <option value="" disabled>
+          {{
+            loadingCategories
+              ? 'Carregando categorias...'
+              : filteredCategories.length
+                ? 'Selecione uma categoria'
+                : 'Nenhuma categoria deste tipo'
+          }}
+        </option>
 
         <option
           v-for="category in filteredCategories"
@@ -148,10 +157,13 @@ import { useTransactions } from '../../composables/useTransactions';
 import { CategoryService } from '../../modules/category/services/categoryService';
 import type { CategoryResponseDTO } from '../../modules/category/dtos/CategoryResponseDTO';
 import { ExpenseService } from '../../modules/expense/services/ExpenseService';
+import { useToast } from '../../composables/useToast';
 import {
   PaymentMethod,
   paymentMethodLabels,
 } from '../../shared/enums/payment-method';
+import { toDateInput } from '../../shared/utils/date';
+import { formatCurrency } from '../../shared/utils/format';
 
 const categoryService = new CategoryService();
 const expenseService = new ExpenseService();
@@ -166,12 +178,6 @@ const emit = defineEmits<{
   (e: 'saved', data: ExpenseDTO): void;
   (e: 'cancel'): void;
 }>();
-
-// Data local no formato "YYYY-MM-DD" (toISOString usaria UTC e poderia virar o dia)
-function toDateInput(date: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
 
 const isEditing = computed(() => !!props.initial?.id);
 
@@ -204,16 +210,25 @@ function fillFromExpense(expense: ExpenseDTO) {
 }
 
 const saving = ref(false);
+const loadingCategories = ref(true);
 const errorMessage = ref('');
+const toast = useToast();
 const { createTransaction, updateTransaction } = useTransactions();
 
 onMounted(async () => {
-  categories.value = await categoryService.listCategory(token);
+  try {
+    categories.value = await categoryService.listCategory(token);
 
-  // Se for edição, busca o lançamento completo (com todas as parcelas)
-  if (props.initial?.id) {
-    const expense = await expenseService.findById(props.initial.id, token);
-    fillFromExpense(expense);
+    // Se for edição, busca o lançamento completo (com todas as parcelas)
+    if (props.initial?.id) {
+      const expense = await expenseService.findById(props.initial.id, token);
+      fillFromExpense(expense);
+    }
+  } catch (err: any) {
+    console.error(err);
+    toast.error(err.message || 'Erro ao carregar dados do formulário.');
+  } finally {
+    loadingCategories.value = false;
   }
 });
 
@@ -239,9 +254,6 @@ const isCreditCard = computed(() => {
 watch(isCreditCard, value => {
   if (!value) form.installments = 1;
 });
-
-const formatCurrency = (value: number) =>
-  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 // Mesma divisão da API: os centavos que sobram vão para as primeiras parcelas
 const installmentsPreview = computed(() => {
@@ -304,10 +316,15 @@ async function save() {
       };
       saved = await createTransaction(payload);
     }
+    toast.success(
+      isEditing.value
+        ? 'Lançamento atualizado com sucesso!'
+        : 'Lançamento criado com sucesso!',
+    );
     emit('saved', saved); // Dashboard vai receber e atualizar UI
   } catch (err: any) {
     console.error(err);
-    errorMessage.value = err.message || 'Erro ao salvar lançamento.';
+    toast.error(err.message || 'Erro ao salvar lançamento.');
   } finally {
     saving.value = false;
   }
