@@ -3,13 +3,13 @@
     <!-- Tipo + Valor -->
     <div class="grid grid-cols-2 gap-3">
       <div>
-        <label class="block mb-1.5 text-sm font-medium text-slate-300">
+        <label class="block mb-1.5 text-sm font-medium text-ink-soft">
           Tipo
         </label>
 
         <select
           v-model="form.type"
-          class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         >
           <option value="income">Receita</option>
           <option value="expense">Despesa</option>
@@ -17,7 +17,7 @@
       </div>
 
       <div>
-        <label class="block mb-1.5 text-sm font-medium text-slate-300">
+        <label class="block mb-1.5 text-sm font-medium text-ink-soft">
           Valor
         </label>
 
@@ -26,19 +26,19 @@
           type="number"
           step="0.01"
           placeholder="0,00"
-          class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
       </div>
     </div>
 
     <div>
-      <label class="block mb-1.5 text-sm font-medium text-slate-300">
+      <label class="block mb-1.5 text-sm font-medium text-ink-soft">
         Forma de pagamento
       </label>
 
       <select
         v-model="form.paymentMethod"
-        class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
       >
         <option :value="null" disabled>Selecione uma forma de pagamento</option>
         <option
@@ -51,32 +51,32 @@
       </select>
     </div>
     <div v-if="isCreditCard">
-      <label class="block mb-1.5 text-sm font-medium text-slate-300">
+      <label class="block mb-1.5 text-sm font-medium text-ink-soft">
         Parcelas
       </label>
 
       <select
         v-model="form.installments"
-        class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
       >
         <option v-for="number in 12" :key="number" :value="number">
           {{ number }}x
         </option>
       </select>
 
-      <p v-if="installmentsPreview" class="text-sm text-slate-400 mt-2">
+      <p v-if="installmentsPreview" class="text-sm text-ink-muted mt-2">
         {{ installmentsPreview }}
       </p>
     </div>
     <div>
-      <label class="block mb-1.5 text-sm font-medium text-slate-300">
+      <label class="block mb-1.5 text-sm font-medium text-ink-soft">
         Categoria
       </label>
 
       <select
         v-model="form.categoryId"
         :disabled="loadingCategories"
-        class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
+        class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50"
       >
         <option value="" disabled>
           {{
@@ -99,28 +99,28 @@
     </div>
 
     <div>
-      <label class="block mb-1.5 text-sm font-medium text-slate-300">
+      <label class="block mb-1.5 text-sm font-medium text-ink-soft">
         {{ form.installments > 1 ? 'Vencimento da 1ª parcela' : 'Vencimento' }}
       </label>
 
       <input
         v-model="form.firstDueDate"
         type="date"
-        class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 pr-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 pr-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
       />
     </div>
 
     <div>
-      <label class="block mb-1.5 text-sm font-medium text-slate-300"> </label>
+      <label class="block mb-1.5 text-sm font-medium text-ink-soft"> </label>
 
       <input
         v-model="form.description"
         placeholder="Descrição (opcional)"
-        class="w-full bg-slate-800 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
       />
     </div>
 
-    <p v-if="errorMessage" class="text-sm text-red-400">
+    <p v-if="errorMessage" class="text-sm text-negative">
       {{ errorMessage }}
     </p>
 
@@ -129,7 +129,7 @@
       <button
         type="button"
         @click="$emit('cancel')"
-        class="px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-800 transition"
+        class="px-4 py-2 rounded-lg border border-line-strong text-ink-soft hover:bg-hover transition"
       >
         Cancelar
       </button>

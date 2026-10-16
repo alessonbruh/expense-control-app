@@ -13,7 +13,7 @@
         v-for="toast in toasts"
         :key="toast.id"
         :class="typeClass[toast.type]"
-        class="flex items-start gap-3 rounded-lg border bg-slate-900 px-4 py-3 text-sm text-slate-100 shadow-lg"
+        class="flex items-start gap-3 rounded-lg border bg-card px-4 py-3 text-sm text-ink shadow-lg"
         role="status"
       >
         <span class="mt-0.5 font-bold">{{ typeIcon[toast.type] }}</span>
@@ -21,7 +21,7 @@
         <button
           @click="dismiss(toast.id)"
           aria-label="Fechar"
-          class="text-slate-400 hover:text-slate-100"
+          class="text-ink-muted hover:text-ink"
         >
           ✕
         </button>
@@ -36,9 +36,9 @@ import { useToast, type ToastType } from '../../composables/useToast';
 const { toasts, dismiss } = useToast();
 
 const typeClass: Record<ToastType, string> = {
-  success: 'border-emerald-500/50 [&>span]:text-emerald-400',
-  error: 'border-red-500/50 [&>span]:text-red-400',
-  info: 'border-sky-500/50 [&>span]:text-sky-400',
+  success: 'border-emerald-500/50 [&>span]:text-accent',
+  error: 'border-red-500/50 [&>span]:text-negative',
+  info: 'border-sky-500/50 [&>span]:text-info',
 };
 
 const typeIcon: Record<ToastType, string> = {
