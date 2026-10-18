@@ -61,8 +61,13 @@
               />
               <span class="ml-2 text-ink-soft">Lembrar-me</span>
             </label>
-            <a href="#" class="text-accent hover:underline"
-              >Esqueceu a senha?</a
+            <router-link
+              :to="{
+                path: '/forgot-password',
+                query: email ? { email } : {},
+              }"
+              class="text-accent hover:underline"
+              >Esqueceu a senha?</router-link
             >
           </div>
 
@@ -90,14 +95,18 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { AuthService } from '../services/authService';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useToast } from '../../../composables/useToast';
 import { setToken } from '../../../shared/auth/session';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 
+const route = useRoute();
 const router = useRouter();
 const toast = useToast();
-const email = ref('');
+// Vem preenchido ao voltar da redefinição de senha
+const email = ref(
+  typeof route.query.email === 'string' ? route.query.email : '',
+);
 const password = ref('');
 const showPassword = ref(false);
 const loading = ref(false);

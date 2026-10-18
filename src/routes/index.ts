@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginPage from '../modules/auth/pages/LoginPage.vue';
 import RegisterPage from '../modules/auth/pages/RegisterPage.vue';
+import ForgotPasswordPage from '../modules/auth/pages/ForgotPasswordPage.vue';
 import DashboardPage from '../modules/dashboard/pages/DashboardPage.vue';
 import { getToken } from '../shared/auth/session';
 
@@ -18,6 +19,11 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterPage,
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPasswordPage,
   },
   {
     path: '/dashboard',
