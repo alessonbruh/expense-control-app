@@ -376,7 +376,7 @@ async function loadDashboard() {
     hasOthersSlice.value = rest.length > 0;
   } catch (err: any) {
     console.error(err);
-    toast.error(err.message || 'Erro ao carregar o dashboard.');
+    toast.fromError(err, 'Erro ao carregar o dashboard.');
   } finally {
     loading.value = false;
   }

@@ -97,7 +97,7 @@ async function generate() {
     password.value = '';
     emit('generated', result.recoveryCodes.length);
   } catch (err: any) {
-    toast.error(err.message || 'Erro ao gerar códigos.');
+    toast.fromError(err, 'Erro ao gerar códigos.');
   } finally {
     loading.value = false;
   }
