@@ -12,6 +12,29 @@
       <div class="flex items-center gap-2">
         <ThemeToggle />
         <button
+          type="button"
+          @click="openRecoveryModal = true"
+          title="Códigos de recuperação de senha"
+          aria-label="Códigos de recuperação de senha"
+          class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-line-strong bg-card text-ink-soft hover:bg-hover hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-5 w-5"
+            aria-hidden="true"
+          >
+            <circle cx="7.5" cy="15.5" r="5.5" />
+            <path d="m21 2-9.6 9.6" />
+            <path d="m15.5 7.5 3 3L22 7l-3-3" />
+          </svg>
+        </button>
+        <button
           @click="openModal = true"
           class="h-9 px-4 cursor-pointer rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition"
         >
@@ -43,6 +66,27 @@
         </button>
       </div>
     </header>
+
+    <!-- Aviso: sem códigos não há como recuperar a senha -->
+    <div
+      v-if="recoveryRemaining !== null && recoveryRemaining <= 2"
+      class="mb-6 flex flex-col gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+      role="status"
+    >
+      <p class="text-sm text-ink-soft">
+        <strong class="text-ink">
+          {{ recoveryWarning }}
+        </strong>
+        Sem eles, não será possível redefinir sua senha se você esquecê-la.
+      </p>
+      <button
+        type="button"
+        @click="openRecoveryModal = true"
+        class="h-9 shrink-0 cursor-pointer rounded-lg bg-amber-500 px-4 text-sm font-medium text-slate-950 hover:bg-amber-400 transition"
+      >
+        Gerar códigos
+      </button>
+    </div>
 
     <!-- Navegação por mês -->
     <nav class="mb-6 flex items-center gap-2" aria-label="Selecionar mês">
@@ -126,6 +170,12 @@
     <Modal v-model="openModal" title="Novo Lançamento">
       <ExpenseForm @saved="onTransactionSaved" @cancel="openModal = false" />
     </Modal>
+
+    <RecoveryCodesModal
+      v-model="openRecoveryModal"
+      :remaining="recoveryRemaining"
+      @generated="recoveryRemaining = $event"
+    />
   </div>
 </template>
 
@@ -138,6 +188,9 @@ import { useToast } from '../../../composables/useToast';
 import { useTheme } from '../../../composables/useTheme';
 import { useAuth } from '../../../composables/useAuth';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
+import RecoveryCodesModal from '../../auth/components/RecoveryCodesModal.vue';
+import { AuthService } from '../../auth/services/authService';
+import { getToken } from '../../../shared/auth/session';
 import {
   addMonths,
   formatMonthLabel,
@@ -153,6 +206,15 @@ const { isDark } = useTheme();
 const { logout, loggingOut } = useAuth();
 
 const openModal = ref(false);
+const openRecoveryModal = ref(false);
+// null enquanto carrega (ou se falhar): o aviso só aparece com o valor real
+const recoveryRemaining = ref<number | null>(null);
+const recoveryWarning = computed(() => {
+  if (recoveryRemaining.value === 0)
+    return 'Você não tem códigos de recuperação.';
+  if (recoveryRemaining.value === 1) return 'Resta só 1 código de recuperação.';
+  return `Restam só ${recoveryRemaining.value} códigos de recuperação.`;
+});
 const loading = ref(true);
 const selectedMonth = ref(startOfMonth(new Date()));
 const expenseTotal = ref(0);
@@ -241,7 +303,22 @@ const cards = computed(() => [
   },
 ]);
 
-onBeforeMount(loadDashboard);
+const authService = new AuthService();
+
+async function loadRecoveryStatus() {
+  try {
+    const { remaining } = await authService.getRecoveryCodesStatus(getToken());
+    recoveryRemaining.value = remaining;
+  } catch (err) {
+    // Não bloqueia o dashboard: sem o status, o aviso apenas não aparece
+    console.error(err);
+  }
+}
+
+onBeforeMount(() => {
+  loadDashboard();
+  loadRecoveryStatus();
+});
 
 function changeMonth(months: number) {
   selectedMonth.value = addMonths(selectedMonth.value, months);
