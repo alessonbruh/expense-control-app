@@ -152,18 +152,12 @@
           class="mx-auto h-[300px] w-[300px] max-w-full rounded-full bg-skeleton animate-pulse"
         ></div>
         <p
-          v-else-if="pieSeries.length === 0"
+          v-else-if="slices.length === 0"
           class="flex h-[300px] items-center justify-center text-ink-muted"
         >
           Nenhuma despesa neste mês.
         </p>
-        <apexchart
-          v-else
-          type="donut"
-          height="300"
-          :options="pieOptions"
-          :series="pieSeries"
-        />
+        <ExpenseDonutChart v-else :slices="slices" :total="expenseTotal" />
       </div>
     </div>
 
@@ -185,7 +179,6 @@ import Modal from '../../../components/ui/Modal.vue';
 import ExpenseForm from '../../../components/transactions/ExpenseForm.vue';
 import { useTransactions } from '../../../composables/useTransactions';
 import { useToast } from '../../../composables/useToast';
-import { useTheme } from '../../../composables/useTheme';
 import { useAuth } from '../../../composables/useAuth';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 import RecoveryCodesModal from '../../auth/components/RecoveryCodesModal.vue';
@@ -199,10 +192,11 @@ import {
   startOfMonth,
 } from '../../../shared/utils/date';
 import { formatCurrency } from '../../../shared/utils/format';
+import ExpenseDonutChart from '../components/ExpenseDonutChart.vue';
+import { summarizeMonth, type ChartSlice } from '../utils/summarizeMonth';
 
 const { getTransactionsByDate } = useTransactions();
 const toast = useToast();
-const { isDark } = useTheme();
 const { logout, loggingOut } = useAuth();
 
 const openModal = ref(false);
@@ -221,73 +215,7 @@ const expenseTotal = ref(0);
 const incomeTotal = ref(0);
 const balance = computed(() => incomeTotal.value - expenseTotal.value);
 
-const labelsChartExpense = ref<string[]>([]);
-const pieSeries = ref<number[]>([]);
-const hasOthersSlice = ref(false);
-
-// Paleta categórica com um tom por tema, validada contra o card de cada um:
-// as cores continuam distinguíveis para daltônicos e a % fica legível.
-// A ordem importa (cores vizinhas foram validadas em pares), não reordene.
-const CHART_THEME = {
-  light: {
-    colors: [
-      '#2a78d6', // azul
-      '#eb6834', // laranja
-      '#1baf7a', // verde-água
-      '#eda100', // amarelo
-      '#e87ba4', // magenta
-      '#008300', // verde
-      '#6250d6', // violeta
-    ],
-    card: '#ffffff',
-    text: '#334155', // ink-soft
-    muted: '#64748b', // ink-muted
-  },
-  dark: {
-    colors: [
-      '#3987e5', // azul
-      '#d95926', // laranja
-      '#199e70', // verde-água
-      '#c98500', // amarelo
-      '#d55181', // magenta
-      '#008300', // verde
-      '#9085e9', // violeta
-    ],
-    card: '#0f172a', // slate-900
-    text: '#cbd5e1', // ink-soft
-    muted: '#94a3b8', // ink-muted
-  },
-};
-const OTHERS_COLOR = '#64748b'; // slate-500, neutro para "Outros" nos dois temas
-const MAX_SLICES = CHART_THEME.light.colors.length;
-const DARK_LABEL = '#0f172a'; // slate-900
-
-const chartTheme = computed(() =>
-  isDark.value ? CHART_THEME.dark : CHART_THEME.light,
-);
-
-// Escolhe texto branco ou escuro, o que tiver mais contraste com a fatia
-function relativeLuminance(hex: string) {
-  const [r, g, b] = [1, 3, 5].map(i => {
-    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  }) as [number, number, number];
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function labelColorFor(hex: string) {
-  const l = relativeLuminance(hex);
-  const contrastWhite = 1.05 / (l + 0.05);
-  const contrastDark = (l + 0.05) / (relativeLuminance(DARK_LABEL) + 0.05);
-  return contrastWhite >= contrastDark ? '#ffffff' : DARK_LABEL;
-}
-
-const sliceColors = computed(() => {
-  const coloredSlices = pieSeries.value.length - (hasOthersSlice.value ? 1 : 0);
-  const colors = chartTheme.value.colors.slice(0, coloredSlices);
-  if (hasOthersSlice.value) colors.push(OTHERS_COLOR);
-  return colors;
-});
+const slices = ref<ChartSlice[]>([]);
 
 const isCurrentMonth = computed(() =>
   isSameMonth(selectedMonth.value, new Date()),
@@ -336,44 +264,10 @@ async function loadDashboard() {
     const { start, end } = getMonthRange(selectedMonth.value);
     const response = await getTransactionsByDate(start, end);
 
-    const expenseMap: Record<string, number> = {};
-    let expenses = 0;
-    let incomes = 0;
-
-    for (const item of response) {
-      // A API retorna só as parcelas com vencimento no período,
-      // então o valor do mês é a soma delas (e não o total do lançamento).
-      const amount = item.installments.reduce(
-        (sum, installment) =>
-          installment.status === 'CANCELED'
-            ? sum
-            : sum + Number(installment.amount),
-        0,
-      );
-
-      if (item.category.type === 'expense') {
-        expenses += amount;
-        expenseMap[item.category.name] =
-          (expenseMap[item.category.name] ?? 0) + amount;
-      } else {
-        incomes += amount;
-      }
-    }
-
-    expenseTotal.value = expenses;
-    incomeTotal.value = incomes;
-
-    // Maiores primeiro; acima de MAX_SLICES categorias, o resto vira "Outros"
-    const sorted = Object.entries(expenseMap).sort((a, b) => b[1] - a[1]);
-    const slices = sorted.slice(0, MAX_SLICES);
-    const rest = sorted.slice(MAX_SLICES);
-    if (rest.length) {
-      slices.push(['Outros', rest.reduce((sum, [, value]) => sum + value, 0)]);
-    }
-
-    labelsChartExpense.value = slices.map(([name]) => name);
-    pieSeries.value = slices.map(([, value]) => value);
-    hasOthersSlice.value = rest.length > 0;
+    const summary = summarizeMonth(response);
+    incomeTotal.value = summary.incomeTotal;
+    expenseTotal.value = summary.expenseTotal;
+    slices.value = summary.slices;
   } catch (err: any) {
     console.error(err);
     toast.fromError(err, 'Erro ao carregar o dashboard.');
@@ -386,61 +280,4 @@ async function onTransactionSaved() {
   openModal.value = false;
   await loadDashboard();
 }
-
-const pieOptions = computed(() => ({
-  labels: labelsChartExpense.value,
-  colors: sliceColors.value,
-  chart: { background: 'transparent', foreColor: '#cbd5e1' },
-  theme: { mode: isDark.value ? 'dark' : 'light' },
-  // Separação de 2px na cor do card entre as fatias
-  stroke: { width: 2, colors: [chartTheme.value.card] },
-  legend: {
-    position: 'bottom',
-    labels: { colors: chartTheme.value.text },
-    markers: { strokeWidth: 0 },
-  },
-  tooltip: { y: { formatter: formatCurrency } },
-  dataLabels: {
-    enabled: true,
-    formatter: (value: number) => `${Math.round(value)}%`,
-    style: {
-      fontSize: '13px',
-      fontWeight: 600,
-      colors: sliceColors.value.map(labelColorFor),
-    },
-    dropShadow: { enabled: false },
-  },
-  plotOptions: {
-    pie: {
-      // Fatias muito finas não comportam o texto; o valor fica no tooltip
-      dataLabels: { minAngleToShowLabel: 12 },
-      donut: {
-        size: '58%',
-        labels: {
-          show: true,
-          value: {
-            color: isDark.value ? '#f1f5f9' : '#0f172a', // ink
-            formatter: (v: string) => formatCurrency(Number(v)),
-          },
-          total: {
-            show: true,
-            label: 'Total',
-            color: chartTheme.value.muted,
-            formatter: () => formatCurrency(expenseTotal.value),
-          },
-        },
-      },
-    },
-  },
-}));
-</script>
-
-<script lang="ts">
-import ApexChart from 'vue3-apexcharts';
-
-export default {
-  components: {
-    apexchart: ApexChart,
-  },
-};
 </script>
