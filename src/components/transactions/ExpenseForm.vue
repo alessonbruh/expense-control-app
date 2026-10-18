@@ -227,7 +227,7 @@ onMounted(async () => {
     }
   } catch (err: any) {
     console.error(err);
-    toast.error(err.message || 'Erro ao carregar dados do formulário.');
+    toast.fromError(err, 'Erro ao carregar dados do formulário.');
   } finally {
     loadingCategories.value = false;
   }
@@ -325,7 +325,7 @@ async function save() {
     emit('saved', saved); // Dashboard vai receber e atualizar UI
   } catch (err: any) {
     console.error(err);
-    toast.error(err.message || 'Erro ao salvar lançamento.');
+    toast.fromError(err, 'Erro ao salvar lançamento.');
   } finally {
     saving.value = false;
   }

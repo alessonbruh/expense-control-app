@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { SessionExpiredError } from '../shared/auth/session';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -29,5 +30,10 @@ export function useToast() {
     success: (message: string) => show(message, 'success'),
     error: (message: string) => show(message, 'error', 6000),
     info: (message: string) => show(message, 'info'),
+    // Erro de uma chamada à API. Sessão expirada já foi avisada: não duplica.
+    fromError: (err: unknown, fallback: string) => {
+      if (err instanceof SessionExpiredError) return;
+      show((err instanceof Error && err.message) || fallback, 'error', 6000);
+    },
   };
 }

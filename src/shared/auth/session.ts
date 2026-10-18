@@ -20,7 +20,15 @@ export function onSessionExpired(handler: () => void) {
   sessionExpiredHandler = handler;
 }
 
+export class SessionExpiredError extends Error {
+  constructor() {
+    super('Sua sessão expirou. Entre novamente.');
+    this.name = 'SessionExpiredError';
+  }
+}
+
 export function expireSession() {
+  const hadSession = getToken() !== null;
   clearSession();
-  sessionExpiredHandler?.();
+  if (hadSession) sessionExpiredHandler?.();
 }
