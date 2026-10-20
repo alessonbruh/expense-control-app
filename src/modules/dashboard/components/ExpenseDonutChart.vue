@@ -17,6 +17,8 @@ import { CHART_PALETTE, OTHERS_COLOR } from '../utils/chartPalette';
 import type { ChartSlice } from '../utils/summarizeMonth';
 
 const props = defineProps<{ slices: ChartSlice[]; total: number }>();
+// Categorias das fatias selecionadas (vazio = nenhuma seleção)
+const emit = defineEmits<{ select: [categories: string[]] }>();
 
 const { isDark } = useTheme();
 const palette = computed(() =>
@@ -28,6 +30,13 @@ const selected = ref<number[]>([]);
 watch(
   () => props.slices,
   () => (selected.value = []),
+);
+
+watch(selected, indexes =>
+  emit(
+    'select',
+    indexes.flatMap(i => props.slices[i]?.categories ?? []),
+  ),
 );
 
 function toggle(index: number) {

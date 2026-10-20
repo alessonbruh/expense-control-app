@@ -24,6 +24,15 @@ export function isSameMonth(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
+/**
+ * "2026-11-10T00:00:00.000Z" -> "10/11". Usa só a parte da data: converter com
+ * new Date() no fuso local mostraria o dia anterior.
+ */
+export function formatDueDay(isoDate: string): string {
+  const [, month, day] = isoDate.split('T')[0]!.split('-');
+  return `${day}/${month}`;
+}
+
 export function formatMonthLabel(date: Date): string {
   const label = date.toLocaleDateString('pt-BR', {
     month: 'long',

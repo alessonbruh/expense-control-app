@@ -157,7 +157,29 @@
         >
           Nenhuma despesa neste mês.
         </p>
-        <ExpenseDonutChart v-else :slices="slices" :total="expenseTotal" />
+        <ExpenseDonutChart
+          v-else
+          :slices="slices"
+          :total="expenseTotal"
+          @select="selectedCategories = $event"
+        />
+      </div>
+
+      <!-- Lançamentos do mês, filtrados pelas fatias selecionadas no gráfico -->
+      <div class="bg-card border border-line rounded-xl p-4">
+        <div v-if="loading" class="space-y-3">
+          <div class="h-5 w-40 rounded bg-skeleton animate-pulse"></div>
+          <div
+            v-for="n in 5"
+            :key="n"
+            class="h-10 rounded bg-skeleton animate-pulse"
+          ></div>
+        </div>
+        <CategoryExpenseList
+          v-else
+          :expenses="expenses"
+          :categories="selectedCategories"
+        />
       </div>
     </div>
 
@@ -193,6 +215,8 @@ import {
 } from '../../../shared/utils/date';
 import { formatCurrency } from '../../../shared/utils/format';
 import ExpenseDonutChart from '../components/ExpenseDonutChart.vue';
+import CategoryExpenseList from '../components/CategoryExpenseList.vue';
+import type { ExpenseResponseDTO } from '../../expense/dto/ExpenseResponseDTO';
 import { summarizeMonth, type ChartSlice } from '../utils/summarizeMonth';
 
 const { getTransactionsByDate } = useTransactions();
@@ -216,6 +240,8 @@ const incomeTotal = ref(0);
 const balance = computed(() => incomeTotal.value - expenseTotal.value);
 
 const slices = ref<ChartSlice[]>([]);
+const expenses = ref<ExpenseResponseDTO[]>([]);
+const selectedCategories = ref<string[]>([]);
 
 const isCurrentMonth = computed(() =>
   isSameMonth(selectedMonth.value, new Date()),
@@ -268,6 +294,9 @@ async function loadDashboard() {
     incomeTotal.value = summary.incomeTotal;
     expenseTotal.value = summary.expenseTotal;
     slices.value = summary.slices;
+    expenses.value = response;
+    // Dados novos: o gráfico limpa a seleção, então a lista volta a mostrar tudo
+    selectedCategories.value = [];
   } catch (err: any) {
     console.error(err);
     toast.fromError(err, 'Erro ao carregar o dashboard.');
