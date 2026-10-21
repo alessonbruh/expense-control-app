@@ -32,9 +32,15 @@ export function useTransactions() {
     return service.getExpenseByDate(start, end, token);
   }
 
+  async function deleteTransaction(id: string): Promise<void> {
+    const token = getToken();
+    return service.deleteExpense(id, token);
+  }
+
   return {
     createTransaction,
     updateTransaction,
+    deleteTransaction,
     getTransactionsByDate,
     loading,
   };

@@ -22,22 +22,24 @@ export class ExpenseService {
     body?: unknown,
   ): Promise<T> {
     try {
+      // Sem corpo, sem Content-Type: o Fastify recusa JSON vazio (ex.: DELETE)
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
           Authorization: `Bearer ${token}`,
         },
         body: body ? JSON.stringify(body) : undefined,
       });
-      const result = await response.json();
+      // 204 (ex.: exclusão) não tem corpo para ler
+      const result = response.status === 204 ? null : await response.json();
 
       if (response.status === 401) {
         expireSession();
         throw new SessionExpiredError();
       }
       if (!response.ok)
-        throw new Error(result.message || 'Erro ao processar requisição');
+        throw new Error(result?.message || 'Erro ao processar requisição');
       return result as T;
     } catch (error: any) {
       if (error instanceof SessionExpiredError) throw error;
@@ -69,6 +71,10 @@ export class ExpenseService {
       payload,
     );
     return result.expense;
+  }
+
+  async deleteExpense(id: string, token?: string | null): Promise<void> {
+    await this.request<null>(`${this.baseUrl}/${id}`, 'DELETE', token);
   }
 
   async findById(id: string, token?: string | null): Promise<ExpenseDTO> {

@@ -9,6 +9,12 @@ export interface ChartSlice {
   categories: string[];
 }
 
+export interface ExpenseRow {
+  id: string;
+  description: string;
+  totalInstallments: number;
+}
+
 export interface MonthSummary {
   incomeTotal: number;
   expenseTotal: number;

@@ -51,9 +51,35 @@
             <span v-if="row.dueDay"> · vence {{ row.dueDay }}</span>
           </p>
         </div>
-        <span class="shrink-0 text-sm font-semibold text-negative">
-          {{ formatCurrency(row.amount) }}
-        </span>
+        <div class="flex shrink-0 items-center gap-1">
+          <span class="text-sm font-semibold text-negative">
+            {{ formatCurrency(row.amount) }}
+          </span>
+          <button
+            type="button"
+            @click="emit('delete', row)"
+            :aria-label="`Excluir ${row.description || 'lançamento'}`"
+            title="Excluir lançamento"
+            class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-red-500/10 hover:text-negative focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path d="M3 6h18" />
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              <path d="M10 11v6M14 11v6" />
+            </svg>
+          </button>
+        </div>
       </li>
     </ul>
   </div>
@@ -65,13 +91,15 @@ import type { ExpenseResponseDTO } from '../../expense/dto/ExpenseResponseDTO';
 import { paymentMethodLabels } from '../../../shared/enums/payment-method';
 import { formatCurrency } from '../../../shared/utils/format';
 import { formatDueDay } from '../../../shared/utils/date';
-import { monthAmount } from '../utils/summarizeMonth';
+import { monthAmount, type ExpenseRow } from '../utils/summarizeMonth';
 
 const props = defineProps<{
   expenses: ExpenseResponseDTO[];
   // Categorias selecionadas no gráfico (vazio = todas)
   categories: string[];
 }>();
+
+const emit = defineEmits<{ delete: [row: ExpenseRow] }>();
 
 // Só despesas: é o que o gráfico ao lado mostra
 const rows = computed(() =>
@@ -90,6 +118,7 @@ const rows = computed(() =>
         category: expense.category.name,
         method: paymentMethodLabels[expense.paymentMethod] ?? '',
         amount: monthAmount(expense),
+        totalInstallments: installment?.totalInstallments ?? 1,
         // Compra parcelada: mostra qual parcela vence neste mês (ex.: 2/5)
         installment:
           installment && installment.totalInstallments > 1

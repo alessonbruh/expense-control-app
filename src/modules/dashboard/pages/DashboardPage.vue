@@ -6,7 +6,9 @@
     >
       <div>
         <h1 class="text-3xl font-bold">Dashboard</h1>
-        <p class="text-ink-muted">Bem-vindo ao seu painel de controle!</p>
+        <p class="text-ink-muted">
+          Bem-vindo ao seu painel de controle financeiro!
+        </p>
       </div>
 
       <div class="flex items-center gap-2">
@@ -179,6 +181,7 @@
           v-else
           :expenses="expenses"
           :categories="selectedCategories"
+          @delete="expenseToDelete = $event"
         />
       </div>
     </div>
@@ -186,6 +189,12 @@
     <Modal v-model="openModal" title="Novo Lançamento">
       <ExpenseForm @saved="onTransactionSaved" @cancel="openModal = false" />
     </Modal>
+
+    <DeleteExpenseModal
+      :expense="expenseToDelete"
+      @close="expenseToDelete = null"
+      @deleted="onTransactionDeleted"
+    />
 
     <RecoveryCodesModal
       v-model="openRecoveryModal"
@@ -216,8 +225,13 @@ import {
 import { formatCurrency } from '../../../shared/utils/format';
 import ExpenseDonutChart from '../components/ExpenseDonutChart.vue';
 import CategoryExpenseList from '../components/CategoryExpenseList.vue';
+import DeleteExpenseModal from '../components/DeleteExpenseModal.vue';
 import type { ExpenseResponseDTO } from '../../expense/dto/ExpenseResponseDTO';
-import { summarizeMonth, type ChartSlice } from '../utils/summarizeMonth';
+import {
+  summarizeMonth,
+  type ChartSlice,
+  type ExpenseRow,
+} from '../utils/summarizeMonth';
 
 const { getTransactionsByDate } = useTransactions();
 const toast = useToast();
@@ -242,6 +256,7 @@ const balance = computed(() => incomeTotal.value - expenseTotal.value);
 const slices = ref<ChartSlice[]>([]);
 const expenses = ref<ExpenseResponseDTO[]>([]);
 const selectedCategories = ref<string[]>([]);
+const expenseToDelete = ref<ExpenseRow | null>(null);
 
 const isCurrentMonth = computed(() =>
   isSameMonth(selectedMonth.value, new Date()),
@@ -307,6 +322,11 @@ async function loadDashboard() {
 
 async function onTransactionSaved() {
   openModal.value = false;
+  await loadDashboard();
+}
+
+async function onTransactionDeleted() {
+  expenseToDelete.value = null;
   await loadDashboard();
 }
 </script>
