@@ -1,23 +1,21 @@
 <template>
-  <div class="flex h-screen">
+  <div class="relative flex h-screen">
+    <ThemeToggle class="absolute top-4 right-4 z-10" />
+
     <!-- Lado direito (formulário de login) -->
     <div
-      class="w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 bg-login-side"
+      class="w-full flex items-center justify-center px-4 bg-page bg-login-side"
     >
       <div
-        class="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900 p-10"
+        class="w-full max-w-md bg-card/95 border border-line rounded-2xl shadow-xl p-6 sm:p-10"
       >
-        <h2
-          class="text-3xl font-semibold text-center text-gray-800 dark:text-gray-100 mb-8"
-        >
+        <h2 class="text-3xl font-semibold text-center text-ink mb-8">
           Acessar Conta
         </h2>
 
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div>
-            <label
-              for="email"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            <label for="email" class="block text-sm font-medium text-ink-soft"
               >E-mail</label
             >
             <input
@@ -26,14 +24,14 @@
               id="email"
               placeholder="seu@email.com"
               required
-              class="w-full mt-1 px-4 py-3 text-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              class="w-full mt-1 px-4 py-3 bg-field border border-line-strong text-ink rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
 
           <div class="relative">
             <label
               for="password"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              class="block text-sm font-medium text-ink-soft"
               >Senha</label
             >
             <input
@@ -42,12 +40,13 @@
               id="password"
               placeholder="••••••••"
               required
-              class="w-full mt-1 px-4 py-3 text-gray-700 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              class="w-full mt-1 px-4 py-3 pr-10 bg-field border border-line-strong text-ink rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
             <button
               type="button"
               @click="togglePassword"
-              class="absolute right-2 top-1/2 transform -translate-y-0 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
+              :aria-label="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
+              class="absolute right-2 top-1/2 transform -translate-y-0 text-ink-muted hover:text-ink"
             >
               <span v-if="showPassword">🙈</span>
               <span v-else>👁️</span>
@@ -58,29 +57,34 @@
             <label class="flex items-center">
               <input
                 type="checkbox"
-                class="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                class="h-4 w-4 accent-emerald-500 rounded"
               />
-              <span class="ml-2 text-gray-600 dark:text-gray-300"
-                >Lembrar-me</span
-              >
+              <span class="ml-2 text-ink-soft">Lembrar-me</span>
             </label>
-            <a href="#" class="text-blue-600 hover:underline dark:text-blue-400"
-              >Esqueceu a senha?</a
+            <router-link
+              :to="{
+                path: '/forgot-password',
+                query: email ? { email } : {},
+              }"
+              class="text-accent hover:underline"
+              >Esqueceu a senha?</router-link
             >
           </div>
 
           <button
             type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 dark:text-gray-100 font-medium py-3 rounded-lg transition-colors"
+            :disabled="loading"
+            class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Entrar
+            <span v-if="!loading">Entrar</span>
+            <span v-else>Entrando...</span>
           </button>
         </form>
 
-        <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+        <p class="text-center text-sm text-ink-muted mt-6">
           Não tem uma conta?
-          <a href="#" class="text-blue-600 hover:underline dark:text-blue-400"
-            >Cadastre-se</a
+          <router-link to="/register" class="text-accent hover:underline"
+            >Cadastre-se</router-link
           >
         </p>
       </div>
@@ -91,28 +95,38 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { AuthService } from '../services/authService';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useToast } from '../../../composables/useToast';
+import { startSession } from '../../../shared/auth/session';
+import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 
+const route = useRoute();
 const router = useRouter();
-const email = ref('');
+const toast = useToast();
+// Vem preenchido ao voltar da redefinição de senha
+const email = ref(
+  typeof route.query.email === 'string' ? route.query.email : '',
+);
 const password = ref('');
 const showPassword = ref(false);
+const loading = ref(false);
 
 const authService = new AuthService();
 
 async function handleLogin() {
+  loading.value = true;
   try {
-    console.log('Iniciando login com:', email.value);
-
     const data = await authService.auth({
       email: email.value,
       password: password.value,
     });
 
-    localStorage.setItem('token', data.token);
+    startSession(data.token, data.user);
     router.push('/dashboard');
   } catch (err: any) {
-    alert(err.message);
+    toast.error(err.message || 'Erro ao entrar.');
+  } finally {
+    loading.value = false;
   }
 }
 

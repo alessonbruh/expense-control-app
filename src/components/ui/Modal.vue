@@ -12,16 +12,16 @@
 
       <div
         :class="modalSizeClass"
-        class="relative bg-white dark:bg-gray-800 rounded-lg p-6 mx-4 z-50 shadow-lg"
+        class="relative bg-card border border-line text-ink rounded-xl p-6 mx-4 z-50 shadow-xl"
       >
         <header class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 class="text-lg font-semibold text-ink">
             {{ title }}
           </h3>
           <button
             @click="close"
             aria-label="Fechar"
-            class="text-gray-500 hover:text-gray-700 dark:hover:text-white"
+            class="text-ink-muted hover:text-ink"
           >
             ✕
           </button>
