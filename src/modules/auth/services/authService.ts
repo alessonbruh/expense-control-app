@@ -152,6 +152,10 @@ export class AuthService {
     return this.post<ResetPasswordResponse>('/reset-password', data);
   }
 
+  async me(token: string | null): Promise<{ name: string; email: string }> {
+    return this.authenticated('', 'GET', token);
+  }
+
   async getRecoveryCodesStatus(
     token: string | null,
   ): Promise<{ remaining: number }> {

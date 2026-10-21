@@ -166,7 +166,7 @@ import {
   PASSWORD_MIN_LENGTH,
 } from '../services/authService';
 import { useToast } from '../../../composables/useToast';
-import { setToken } from '../../../shared/auth/session';
+import { startSession } from '../../../shared/auth/session';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 import RecoveryCodesList from '../components/RecoveryCodesList.vue';
 
@@ -182,7 +182,6 @@ const form = reactive<Record<Field, string>>({
   password: '',
   confirmPassword: '',
 });
-// O erro de um campo só aparece depois que o usuário sai dele (ou tenta enviar)
 const touched = reactive<Record<Field, boolean>>({
   name: false,
   email: false,
@@ -261,7 +260,7 @@ async function handleRegister() {
       email: form.email,
       password: form.password,
     });
-    setToken(data.token);
+    startSession(data.token, data.user);
     loggedIn.value = true;
   } catch {
     loggedIn.value = false;

@@ -97,7 +97,7 @@ import { ref } from 'vue';
 import { AuthService } from '../services/authService';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from '../../../composables/useToast';
-import { setToken } from '../../../shared/auth/session';
+import { startSession } from '../../../shared/auth/session';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 
 const route = useRoute();
@@ -121,7 +121,7 @@ async function handleLogin() {
       password: password.value,
     });
 
-    setToken(data.token);
+    startSession(data.token, data.user);
     router.push('/dashboard');
   } catch (err: any) {
     toast.error(err.message || 'Erro ao entrar.');

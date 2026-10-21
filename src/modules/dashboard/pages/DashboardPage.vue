@@ -4,11 +4,36 @@
     <header
       class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
     >
-      <div>
-        <h1 class="text-3xl font-bold">Dashboard</h1>
-        <p class="text-ink-muted">
-          Bem-vindo ao seu painel de controle financeiro!
-        </p>
+      <div class="flex min-w-0 items-center gap-3">
+        <div
+          class="flex h-12 w-12 shrink-0 select-none items-center justify-center rounded-full bg-emerald-600 text-lg font-semibold text-white"
+          :title="user ? `${user.name} (${user.email})` : undefined"
+          aria-hidden="true"
+        >
+          <span v-if="initials">{{ initials }}</span>
+          <svg
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-6 w-6"
+          >
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21a8 8 0 0 1 16 0" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h1 class="truncate text-2xl font-bold sm:text-3xl">
+            {{ displayName ? `Olá, ${displayName}!` : 'Olá!' }}
+          </h1>
+          <p class="truncate text-sm text-ink-muted sm:text-base">
+            Bem-vindo ao seu painel de controle financeiro!
+          </p>
+        </div>
       </div>
 
       <div class="flex items-center gap-2">
@@ -211,6 +236,7 @@ import ExpenseForm from '../../../components/transactions/ExpenseForm.vue';
 import { useTransactions } from '../../../composables/useTransactions';
 import { useToast } from '../../../composables/useToast';
 import { useAuth } from '../../../composables/useAuth';
+import { useCurrentUser } from '../../../composables/useCurrentUser';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 import RecoveryCodesModal from '../../auth/components/RecoveryCodesModal.vue';
 import { AuthService } from '../../auth/services/authService';
@@ -236,6 +262,7 @@ import {
 const { getTransactionsByDate } = useTransactions();
 const toast = useToast();
 const { logout, loggingOut } = useAuth();
+const { user, displayName, initials, ensureLoaded } = useCurrentUser();
 
 const openModal = ref(false);
 const openRecoveryModal = ref(false);
@@ -287,6 +314,7 @@ async function loadRecoveryStatus() {
 onBeforeMount(() => {
   loadDashboard();
   loadRecoveryStatus();
+  ensureLoaded();
 });
 
 function changeMonth(months: number) {
