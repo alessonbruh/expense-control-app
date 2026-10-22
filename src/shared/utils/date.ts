@@ -33,6 +33,29 @@ export function formatDueDay(isoDate: string): string {
   return `${day}/${month}`;
 }
 
+export function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+}
+
+export function parseMonthKey(key: string): Date {
+  const [year, month] = key.split('-').map(Number);
+  return new Date(year!, month! - 1, 1);
+}
+
+export function lastMonthKeys(end: Date, count: number): string[] {
+  return Array.from({ length: count }, (_, index) =>
+    monthKey(addMonths(end, index - count + 1)),
+  );
+}
+
+export function formatShortMonth(key: string): string {
+  const date = parseMonthKey(key);
+  const month = date
+    .toLocaleDateString('pt-BR', { month: 'short' })
+    .replace('.', '');
+  return `${month}/${String(date.getFullYear()).slice(-2)}`;
+}
+
 export function formatMonthLabel(date: Date): string {
   const label = date.toLocaleDateString('pt-BR', {
     month: 'long',
