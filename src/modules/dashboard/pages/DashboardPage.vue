@@ -206,6 +206,7 @@
           v-else
           :expenses="expenses"
           :categories="selectedCategories"
+          @edit="expenseToEdit = $event"
           @delete="expenseToDelete = $event"
         />
       </div>
@@ -226,6 +227,20 @@
 
     <Modal v-model="openModal" title="Novo Lançamento">
       <ExpenseForm @saved="onTransactionSaved" @cancel="openModal = false" />
+    </Modal>
+
+    <Modal
+      :model-value="expenseToEdit !== null"
+      title="Editar Lançamento"
+      @update:model-value="expenseToEdit = null"
+    >
+      <ExpenseForm
+        v-if="expenseToEdit"
+        :key="expenseToEdit.id"
+        :initial="{ id: expenseToEdit.id }"
+        @saved="onTransactionEdited"
+        @cancel="expenseToEdit = null"
+      />
     </Modal>
 
     <DeleteExpenseModal
@@ -302,6 +317,7 @@ const slices = ref<ChartSlice[]>([]);
 const expenses = ref<ExpenseResponseDTO[]>([]);
 const selectedCategories = ref<string[]>([]);
 const expenseToDelete = ref<ExpenseRow | null>(null);
+const expenseToEdit = ref<ExpenseRow | null>(null);
 
 const budgetService = new BudgetService();
 const budgets = ref<BudgetDTO[]>([]);
@@ -387,6 +403,11 @@ async function loadDashboard() {
 
 async function onTransactionSaved() {
   openModal.value = false;
+  await loadDashboard();
+}
+
+async function onTransactionEdited() {
+  expenseToEdit.value = null;
   await loadDashboard();
 }
 

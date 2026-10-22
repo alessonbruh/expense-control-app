@@ -135,12 +135,13 @@
       </button>
 
       <button
-        :disabled="saving"
+        :disabled="saving || loadingCategories"
         type="submit"
         class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <span v-if="!saving">Salvar</span>
-        <span v-else>Salvando...</span>
+        <span v-if="saving">Salvando...</span>
+        <span v-else-if="isEditing">Salvar alterações</span>
+        <span v-else>Salvar</span>
       </button>
     </div>
   </form>
