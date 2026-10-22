@@ -236,6 +236,14 @@
       @edit="openBudgetModal = true"
     />
 
+    <MonthlyEvolutionCard
+      class="mt-4"
+      :months="evolutionMonths"
+      :selected-month="monthKey(selectedMonth)"
+      :loading="loadingEvolution"
+      @select="openMonth"
+    />
+
     <BudgetModal
       v-model="openBudgetModal"
       :budgets="budgets"
@@ -292,7 +300,11 @@ import {
   formatMonthLabel,
   getMonthRange,
   isSameMonth,
+  lastMonthKeys,
+  monthKey,
+  parseMonthKey,
   startOfMonth,
+  toDateInput,
 } from '../../../shared/utils/date';
 import { formatCurrency } from '../../../shared/utils/format';
 import ExpenseDonutChart from '../components/ExpenseDonutChart.vue';
@@ -303,6 +315,11 @@ import BudgetModal from '../components/BudgetModal.vue';
 import { BudgetService } from '../../budget/services/budgetService';
 import type { BudgetDTO } from '../../budget/dto/BudgetDTO';
 import { buildBudgetProgress } from '../utils/budgetProgress';
+import MonthlyEvolutionCard from '../components/MonthlyEvolutionCard.vue';
+import {
+  buildMonthlyTotals,
+  type MonthTotals,
+} from '../utils/monthlyEvolution';
 import type { ExpenseResponseDTO } from '../../expense/dto/ExpenseResponseDTO';
 import {
   summarizeMonth,
@@ -315,8 +332,12 @@ const toast = useToast();
 const { logout, loggingOut } = useAuth();
 const { user, displayName, initials, ensureLoaded } = useCurrentUser();
 
+const EVOLUTION_MONTHS = 12;
+
 const openModal = ref(false);
 const openRecoveryModal = ref(false);
+const evolutionMonths = ref<MonthTotals[]>([]);
+const loadingEvolution = ref(true);
 // null enquanto carrega (ou se falhar): o aviso só aparece com o valor real
 const recoveryRemaining = ref<number | null>(null);
 const recoveryWarning = computed(() => {
@@ -402,7 +423,32 @@ function goToCurrentMonth() {
   loadDashboard();
 }
 
+function openMonth(key: string) {
+  const month = parseMonthKey(key);
+  if (isSameMonth(month, selectedMonth.value)) return;
+  selectedMonth.value = month;
+  loadDashboard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function loadEvolution() {
+  loadingEvolution.value = true;
+  try {
+    const months = lastMonthKeys(selectedMonth.value, EVOLUTION_MONTHS);
+    const start = toDateInput(parseMonthKey(months[0]!));
+    const { end } = getMonthRange(selectedMonth.value);
+    const response = await getTransactionsByDate(start, end);
+    evolutionMonths.value = buildMonthlyTotals(response, months);
+  } catch (err) {
+    console.error(err);
+    toast.fromError(err, 'Erro ao carregar a evolução dos meses.');
+  } finally {
+    loadingEvolution.value = false;
+  }
+}
+
 async function loadDashboard() {
+  loadEvolution();
   loading.value = true;
   try {
     const { start, end } = getMonthRange(selectedMonth.value);
