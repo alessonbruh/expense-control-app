@@ -87,6 +87,13 @@ As cores são variáveis CSS (`--card`, `--ink`, `--line`...) definidas para cad
 ### Animações com respeito à acessibilidade
 Os números dos cards e as barras do orçamento são animados, mas as animações são desligadas quando o sistema está com "reduzir movimento" ativado.
 
+### Content-Security-Policy
+O token de sessão fica no `localStorage`, que qualquer script da página consegue ler. Por isso o `index.html` declara uma CSP que só permite executar scripts do próprio app e só permite requisições para o próprio app e para a API (`VITE_API_URL`):
+- um script injetado na página (XSS) é bloqueado pelo navegador e não chega a ler o token;
+- mesmo que algum código malicioso rodasse, ele não conseguiria enviar dados para outro domínio.
+
+Por isso não há nenhum script inline: o tema é aplicado antes da página aparecer por `public/theme-init.js`, um arquivo próprio.
+
 ### Recuperação de senha sem e-mail
 No cadastro, o app mostra 8 códigos de recuperação, com opções de copiar e baixar, e só deixa continuar depois de o usuário confirmar que os guardou. Com um desses códigos, a senha pode ser redefinida na tela "Esqueceu a senha?". O dashboard avisa quando restam poucos códigos.
 
