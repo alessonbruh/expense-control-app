@@ -211,6 +211,19 @@
       </div>
     </div>
 
+    <BudgetCard
+      class="mt-4"
+      :items="budgetItems"
+      :loading="loading || loadingBudgets"
+      @edit="openBudgetModal = true"
+    />
+
+    <BudgetModal
+      v-model="openBudgetModal"
+      :budgets="budgets"
+      @saved="loadBudgets"
+    />
+
     <Modal v-model="openModal" title="Novo Lançamento">
       <ExpenseForm @saved="onTransactionSaved" @cancel="openModal = false" />
     </Modal>
@@ -252,6 +265,11 @@ import { formatCurrency } from '../../../shared/utils/format';
 import ExpenseDonutChart from '../components/ExpenseDonutChart.vue';
 import CategoryExpenseList from '../components/CategoryExpenseList.vue';
 import DeleteExpenseModal from '../components/DeleteExpenseModal.vue';
+import BudgetCard from '../components/BudgetCard.vue';
+import BudgetModal from '../components/BudgetModal.vue';
+import { BudgetService } from '../../budget/services/budgetService';
+import type { BudgetDTO } from '../../budget/dto/BudgetDTO';
+import { buildBudgetProgress } from '../utils/budgetProgress';
 import type { ExpenseResponseDTO } from '../../expense/dto/ExpenseResponseDTO';
 import {
   summarizeMonth,
@@ -285,6 +303,14 @@ const expenses = ref<ExpenseResponseDTO[]>([]);
 const selectedCategories = ref<string[]>([]);
 const expenseToDelete = ref<ExpenseRow | null>(null);
 
+const budgetService = new BudgetService();
+const budgets = ref<BudgetDTO[]>([]);
+const loadingBudgets = ref(true);
+const openBudgetModal = ref(false);
+const budgetItems = computed(() =>
+  buildBudgetProgress(budgets.value, expenses.value),
+);
+
 const isCurrentMonth = computed(() =>
   isSameMonth(selectedMonth.value, new Date()),
 );
@@ -311,8 +337,19 @@ async function loadRecoveryStatus() {
   }
 }
 
+async function loadBudgets() {
+  try {
+    budgets.value = await budgetService.list();
+  } catch (err) {
+    toast.fromError(err, 'Erro ao carregar o orçamento.');
+  } finally {
+    loadingBudgets.value = false;
+  }
+}
+
 onBeforeMount(() => {
   loadDashboard();
+  loadBudgets();
   loadRecoveryStatus();
   ensureLoaded();
 });
