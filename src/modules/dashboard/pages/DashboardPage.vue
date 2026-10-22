@@ -95,25 +95,27 @@
     </header>
 
     <!-- Aviso: sem códigos não há como recuperar a senha -->
-    <div
-      v-if="recoveryRemaining !== null && recoveryRemaining <= 2"
-      class="mb-6 flex flex-col gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between"
-      role="status"
-    >
-      <p class="text-sm text-ink-soft">
-        <strong class="text-ink">
-          {{ recoveryWarning }}
-        </strong>
-        Sem eles, não será possível redefinir sua senha se você esquecê-la.
-      </p>
-      <button
-        type="button"
-        @click="openRecoveryModal = true"
-        class="h-9 shrink-0 cursor-pointer rounded-lg bg-amber-500 px-4 text-sm font-medium text-slate-950 hover:bg-amber-400 transition"
+    <Transition name="expand">
+      <div
+        v-if="recoveryRemaining !== null && recoveryRemaining <= 2"
+        class="mb-6 flex flex-col gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between"
+        role="status"
       >
-        Gerar códigos
-      </button>
-    </div>
+        <p class="text-sm text-ink-soft">
+          <strong class="text-ink">
+            {{ recoveryWarning }}
+          </strong>
+          Sem eles, não será possível redefinir sua senha se você esquecê-la.
+        </p>
+        <button
+          type="button"
+          @click="openRecoveryModal = true"
+          class="h-9 shrink-0 cursor-pointer rounded-lg bg-amber-500 px-4 text-sm font-medium text-slate-950 hover:bg-amber-400 transition"
+        >
+          Gerar códigos
+        </button>
+      </div>
+    </Transition>
 
     <!-- Navegação por mês -->
     <nav class="mb-6 flex items-center gap-2" aria-label="Selecionar mês">
@@ -126,9 +128,14 @@
         ←
       </button>
 
-      <span class="min-w-44 text-center text-lg font-semibold">
-        {{ formatMonthLabel(selectedMonth) }}
-      </span>
+      <Transition name="fade" mode="out-in">
+        <span
+          :key="formatMonthLabel(selectedMonth)"
+          class="min-w-44 text-center text-lg font-semibold"
+        >
+          {{ formatMonthLabel(selectedMonth) }}
+        </span>
+      </Transition>
 
       <button
         @click="changeMonth(1)"
@@ -139,21 +146,23 @@
         →
       </button>
 
-      <button
-        v-if="!isCurrentMonth"
-        @click="goToCurrentMonth"
-        :disabled="loading"
-        class="ml-2 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 text-sm font-medium text-accent hover:bg-emerald-500/20 hover:border-emerald-500/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span aria-hidden="true">↺</span>
-        Mês atual
-      </button>
+      <Transition name="fade">
+        <button
+          v-if="!isCurrentMonth"
+          @click="goToCurrentMonth"
+          :disabled="loading"
+          class="ml-2 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 text-sm font-medium text-accent hover:bg-emerald-500/20 hover:border-emerald-500/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span aria-hidden="true">↺</span>
+          Mês atual
+        </button>
+      </Transition>
     </nav>
 
     <!-- Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div
-        v-for="card in cards"
+        v-for="(card, index) in cards"
         :key="card.label"
         class="bg-card border border-line rounded-xl p-4"
       >
@@ -162,7 +171,12 @@
           v-if="loading"
           class="mt-2 h-8 w-32 rounded bg-skeleton animate-pulse"
         ></div>
-        <p v-else :class="card.color" class="text-2xl font-semibold">
+        <p
+          v-else
+          :class="card.color"
+          :style="{ animationDelay: `${index * 60}ms` }"
+          class="animate-fade-up text-2xl font-semibold tabular-nums"
+        >
           {{ formatCurrency(card.value) }}
         </p>
       </div>
@@ -180,12 +194,13 @@
         ></div>
         <p
           v-else-if="slices.length === 0"
-          class="flex h-[300px] items-center justify-center text-ink-muted"
+          class="animate-fade-up flex h-[300px] items-center justify-center text-ink-muted"
         >
           Nenhuma despesa neste mês.
         </p>
         <ExpenseDonutChart
           v-else
+          class="animate-fade-up"
           :slices="slices"
           :total="expenseTotal"
           @select="selectedCategories = $event"
@@ -204,6 +219,8 @@
         </div>
         <CategoryExpenseList
           v-else
+          class="animate-fade-up"
+          style="animation-delay: 80ms"
           :expenses="expenses"
           :categories="selectedCategories"
           @edit="expenseToEdit = $event"
@@ -265,6 +282,7 @@ import { useTransactions } from '../../../composables/useTransactions';
 import { useToast } from '../../../composables/useToast';
 import { useAuth } from '../../../composables/useAuth';
 import { useCurrentUser } from '../../../composables/useCurrentUser';
+import { useAnimatedNumber } from '../../../composables/useAnimatedNumber';
 import ThemeToggle from '../../../components/ui/ThemeToggle.vue';
 import RecoveryCodesModal from '../../auth/components/RecoveryCodesModal.vue';
 import { AuthService } from '../../auth/services/authService';
@@ -331,12 +349,16 @@ const isCurrentMonth = computed(() =>
   isSameMonth(selectedMonth.value, new Date()),
 );
 
+const animatedIncome = useAnimatedNumber(incomeTotal);
+const animatedExpense = useAnimatedNumber(expenseTotal);
+const animatedBalance = useAnimatedNumber(balance);
+
 const cards = computed(() => [
-  { label: 'Receitas', value: incomeTotal.value, color: 'text-accent' },
-  { label: 'Despesas', value: expenseTotal.value, color: 'text-negative' },
+  { label: 'Receitas', value: animatedIncome.value, color: 'text-accent' },
+  { label: 'Despesas', value: animatedExpense.value, color: 'text-negative' },
   {
     label: 'Saldo',
-    value: balance.value,
+    value: animatedBalance.value,
     color: balance.value < 0 ? 'text-negative' : 'text-info',
   },
 ]);

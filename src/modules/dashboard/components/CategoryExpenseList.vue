@@ -9,12 +9,14 @@
           {{ formatCurrency(total) }}
         </p>
       </div>
-      <span
-        v-if="categories.length"
-        class="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-accent"
-      >
-        Filtrado
-      </span>
+      <Transition name="fade">
+        <span
+          v-if="categories.length"
+          class="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-accent"
+        >
+          Filtrado
+        </span>
+      </Transition>
     </header>
 
     <p
@@ -31,9 +33,11 @@
       Nenhuma despesa neste mês.
     </p>
 
-    <ul
+    <TransitionGroup
       v-else
-      class="-mx-1 max-h-[300px] divide-y divide-line overflow-y-auto px-1"
+      tag="ul"
+      name="list"
+      class="-mx-1 max-h-[300px] divide-y divide-line overflow-y-auto overflow-x-hidden px-1"
     >
       <li
         v-for="row in rows"
@@ -103,7 +107,7 @@
           </button>
         </div>
       </li>
-    </ul>
+    </TransitionGroup>
   </div>
 </template>
 

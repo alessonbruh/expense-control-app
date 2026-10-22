@@ -37,7 +37,11 @@ export function useTheme() {
 
   function setTheme(value: Theme) {
     theme.value = value;
+    // Fade das cores só durante a troca, para não animar o resto do uso
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
     applyTheme(value);
+    window.setTimeout(() => root.classList.remove('theme-transition'), 300);
     try {
       localStorage.setItem(STORAGE_KEY, value);
     } catch {
