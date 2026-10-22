@@ -41,7 +41,10 @@
       </button>
     </div>
 
-    <ul v-else class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul
+      v-else
+      class="animate-fade-up grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3"
+    >
       <li v-for="item in items" :key="item.categoryId">
         <div class="mb-1.5 flex items-baseline justify-between gap-2 text-sm">
           <span class="truncate font-medium text-ink">{{ item.name }}</span>
@@ -58,7 +61,7 @@
           aria-valuemax="100"
         >
           <div
-            class="h-full rounded-full transition-all"
+            class="animate-grow-x h-full origin-left rounded-full transition-[width] duration-500 ease-out"
             :class="barColor[item.level]"
             :style="{ width: `${Math.min(item.percent, 100)}%` }"
           ></div>

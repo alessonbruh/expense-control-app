@@ -50,24 +50,28 @@
         </option>
       </select>
     </div>
-    <div v-if="isCreditCard">
-      <label class="block mb-1.5 text-sm font-medium text-ink-soft">
-        Parcelas
-      </label>
+    <Transition name="expand">
+      <div v-if="isCreditCard">
+        <label class="block mb-1.5 text-sm font-medium text-ink-soft">
+          Parcelas
+        </label>
 
-      <select
-        v-model="form.installments"
-        class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-      >
-        <option v-for="number in 12" :key="number" :value="number">
-          {{ number }}x
-        </option>
-      </select>
+        <select
+          v-model="form.installments"
+          class="w-full bg-field border border-line-strong text-ink rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+        >
+          <option v-for="number in 12" :key="number" :value="number">
+            {{ number }}x
+          </option>
+        </select>
 
-      <p v-if="installmentsPreview" class="text-sm text-ink-muted mt-2">
-        {{ installmentsPreview }}
-      </p>
-    </div>
+        <Transition name="fade">
+          <p v-if="installmentsPreview" class="text-sm text-ink-muted mt-2">
+            {{ installmentsPreview }}
+          </p>
+        </Transition>
+      </div>
+    </Transition>
     <div>
       <label class="block mb-1.5 text-sm font-medium text-ink-soft">
         Categoria
@@ -120,9 +124,11 @@
       />
     </div>
 
-    <p v-if="errorMessage" class="text-sm text-negative">
-      {{ errorMessage }}
-    </p>
+    <Transition name="expand">
+      <p v-if="errorMessage" class="text-sm text-negative">
+        {{ errorMessage }}
+      </p>
+    </Transition>
 
     <!-- Botões -->
     <div class="flex justify-end gap-3 pt-2">
@@ -135,12 +141,13 @@
       </button>
 
       <button
-        :disabled="saving"
+        :disabled="saving || loadingCategories"
         type="submit"
         class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <span v-if="!saving">Salvar</span>
-        <span v-else>Salvando...</span>
+        <span v-if="saving">Salvando...</span>
+        <span v-else-if="isEditing">Salvar alterações</span>
+        <span v-else>Salvar</span>
       </button>
     </div>
   </form>

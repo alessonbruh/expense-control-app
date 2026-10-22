@@ -9,12 +9,14 @@
           {{ formatCurrency(total) }}
         </p>
       </div>
-      <span
-        v-if="categories.length"
-        class="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-accent"
-      >
-        Filtrado
-      </span>
+      <Transition name="fade">
+        <span
+          v-if="categories.length"
+          class="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-accent"
+        >
+          Filtrado
+        </span>
+      </Transition>
     </header>
 
     <p
@@ -31,9 +33,11 @@
       Nenhuma despesa neste mês.
     </p>
 
-    <ul
+    <TransitionGroup
       v-else
-      class="-mx-1 max-h-[300px] divide-y divide-line overflow-y-auto px-1"
+      tag="ul"
+      name="list"
+      class="-mx-1 max-h-[300px] divide-y divide-line overflow-y-auto overflow-x-hidden px-1"
     >
       <li
         v-for="row in rows"
@@ -55,6 +59,28 @@
           <span class="text-sm font-semibold text-negative">
             {{ formatCurrency(row.amount) }}
           </span>
+          <button
+            type="button"
+            @click="emit('edit', row)"
+            :aria-label="`Editar ${row.description || 'lançamento'}`"
+            title="Editar lançamento"
+            class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-ink-muted hover:bg-emerald-500/10 hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </button>
           <button
             type="button"
             @click="emit('delete', row)"
@@ -81,7 +107,7 @@
           </button>
         </div>
       </li>
-    </ul>
+    </TransitionGroup>
   </div>
 </template>
 
@@ -99,7 +125,10 @@ const props = defineProps<{
   categories: string[];
 }>();
 
-const emit = defineEmits<{ delete: [row: ExpenseRow] }>();
+const emit = defineEmits<{
+  edit: [row: ExpenseRow];
+  delete: [row: ExpenseRow];
+}>();
 
 // Só despesas: é o que o gráfico ao lado mostra
 const rows = computed(() =>
