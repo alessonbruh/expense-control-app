@@ -1,37 +1,40 @@
 <template>
   <teleport to="body">
-    <div
-      v-if="modelValue"
-      class="fixed inset-0 z-50 flex items-center justify-center"
-    >
+    <!-- duration: as transições ficam no fundo e no painel, não na raiz -->
+    <Transition name="modal" :duration="{ enter: 200, leave: 200 }">
       <div
-        class="fixed inset-0 bg-black/50"
-        @click="close"
-        aria-hidden="true"
-      ></div>
-
-      <div
-        :class="modalSizeClass"
-        class="relative bg-card border border-line text-ink rounded-xl p-6 mx-4 z-50 shadow-xl"
+        v-if="modelValue"
+        class="fixed inset-0 z-50 flex items-center justify-center"
       >
-        <header class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-ink">
-            {{ title }}
-          </h3>
-          <button
-            @click="close"
-            aria-label="Fechar"
-            class="text-ink-muted hover:text-ink"
-          >
-            ✕
-          </button>
-        </header>
+        <div
+          class="modal-backdrop fixed inset-0 bg-black/50"
+          @click="close"
+          aria-hidden="true"
+        ></div>
 
-        <div class="overflow-auto max-h-[70vh]">
-          <slot />
+        <div
+          :class="modalSizeClass"
+          class="modal-panel relative bg-card border border-line text-ink rounded-xl p-6 mx-4 z-50 shadow-xl"
+        >
+          <header class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-ink">
+              {{ title }}
+            </h3>
+            <button
+              @click="close"
+              aria-label="Fechar"
+              class="text-ink-muted hover:text-ink"
+            >
+              ✕
+            </button>
+          </header>
+
+          <div class="overflow-auto max-h-[70vh]">
+            <slot />
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </teleport>
 </template>
 

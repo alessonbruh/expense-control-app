@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "apexcharts/dist/apexcharts.css";
+@import 'tailwindcss';
+@import 'apexcharts/dist/apexcharts.css';
 
 /* Tema escuro ativado pela classe .dark no <html> (ver useTheme) */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -22,6 +22,23 @@
   --color-accent: var(--accent);
   --color-negative: var(--negative);
   --color-info: var(--info);
+
+  /* Animações: animate-fade-up (conteúdo entrando) e animate-grow-x (barras) */
+  --animate-fade-up: fade-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-grow-x: grow-x 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
 }
 
 :root {
@@ -70,4 +87,122 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Clique: o botão "afunda" de leve */
+@layer base {
+  button:not(:disabled):active {
+    transform: scale(0.97);
+  }
+}
+
+/* Troca de tema: as cores fazem fade em vez de piscar (classe aplicada só
+   durante a troca, ver useTheme) */
+html.theme-transition,
+html.theme-transition *:not(.spin-enter-active):not(.spin-leave-active),
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition:
+    background-color 250ms ease,
+    border-color 250ms ease,
+    color 250ms ease,
+    fill 250ms ease,
+    stroke 250ms ease !important;
+}
+
+/* Transições do Vue (<Transition name="...">) */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 200ms ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-leave-to {
+  opacity: 0;
+}
+
+.expand-enter-active,
+.expand-leave-active {
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.list-enter-active,
+.list-leave-active,
+.list-move {
+  transition:
+    opacity 250ms ease,
+    transform 250ms ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+/* Modal: o fundo faz fade e o painel cresce de leve */
+.modal-enter-active .modal-backdrop,
+.modal-leave-active .modal-backdrop {
+  transition: opacity 200ms ease;
+}
+.modal-enter-active .modal-panel,
+.modal-leave-active .modal-panel {
+  transition:
+    opacity 200ms ease,
+    transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.modal-enter-from .modal-backdrop,
+.modal-leave-to .modal-backdrop {
+  opacity: 0;
+}
+.modal-enter-from .modal-panel,
+.modal-leave-to .modal-panel {
+  opacity: 0;
+  transform: translateY(8px) scale(0.97);
+}
+
+/* Ícone do botão de tema gira na troca */
+.spin-enter-active,
+.spin-leave-active {
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+.spin-enter-from {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+.spin-leave-to {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+/* Quem pediu menos movimento no sistema não vê animações */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

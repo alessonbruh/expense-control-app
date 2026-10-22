@@ -5,21 +5,21 @@
     size="sm"
     @update:model-value="close"
   >
-    <div v-if="expense" class="space-y-4">
+    <div v-if="shown" class="space-y-4">
       <p class="text-sm text-ink-soft">
         Tem certeza que deseja excluir
         <strong class="text-ink">{{
-          expense.description || 'este lançamento'
+          shown.description || 'este lançamento'
         }}</strong
         >? Essa ação não pode ser desfeita.
       </p>
 
       <p
-        v-if="expense.totalInstallments > 1"
+        v-if="shown.totalInstallments > 1"
         class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-ink-soft"
         role="alert"
       >
-        Esta compra é parcelada em {{ expense.totalInstallments }}x. Todas as
+        Esta compra é parcelada em {{ shown.totalInstallments }}x. Todas as
         parcelas serão excluídas, não só a deste mês.
       </p>
 
@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import Modal from '../../../components/ui/Modal.vue';
 import { useTransactions } from '../../../composables/useTransactions';
 import { useToast } from '../../../composables/useToast';
@@ -58,6 +58,15 @@ const emit = defineEmits<{ close: []; deleted: [id: string] }>();
 const { deleteTransaction } = useTransactions();
 const toast = useToast();
 const deleting = ref(false);
+
+// Mantém o último lançamento enquanto o modal anima a saída
+const shown = ref<ExpenseRow | null>(props.expense);
+watch(
+  () => props.expense,
+  expense => {
+    if (expense) shown.value = expense;
+  },
+);
 
 function close() {
   if (!deleting.value) emit('close');
