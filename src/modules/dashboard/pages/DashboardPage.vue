@@ -279,6 +279,16 @@
       :remaining="recoveryRemaining"
       @generated="recoveryRemaining = $event"
     />
+
+    <footer class="mt-8 pb-2 text-center text-xs text-ink-muted">
+      © {{ new Date().getFullYear() }} Desenvolvido por
+      <a
+        href="https://github.com/alessonbruh"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="font-medium text-ink-soft hover:underline"
+      >Alesson Bruno</a>
+    </footer>
   </div>
 </template>
 

@@ -132,3 +132,11 @@ Com a API rodando em desenvolvimento, já existe uma conta com dados de exemplo 
 | `npm run dev` | Inicia em modo desenvolvimento |
 | `npm run build` | Checa os tipos (`vue-tsc`) e gera a versão de produção em `dist/` |
 | `npm run preview` | Serve a versão de produção localmente |
+
+## Autor
+
+Desenvolvido por **Alesson Bruno** ([@alessonbruh](https://github.com/alessonbruh)).
+
+## Licença
+
+Distribuído sob a licença MIT. Veja [LICENSE](LICENSE). O aviso de copyright deve ser mantido em qualquer cópia ou versão modificada do código.
