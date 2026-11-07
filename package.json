@@ -2,6 +2,8 @@
   "name": "expense-control-app",
   "private": true,
   "version": "0.0.0",
+  "author": "Alesson Bruno (https://github.com/alessonbruh)",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
