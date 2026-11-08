@@ -229,6 +229,15 @@
       </div>
     </div>
 
+    <CreditCardInvoicesCard
+      class="mt-4"
+      :invoices="invoices"
+      :has-cards="creditCards.length > 0"
+      :loading="loadingInvoices"
+      @manage="openCardModal = true"
+      @open="invoiceToShow = $event"
+    />
+
     <BudgetCard
       class="mt-4"
       :items="budgetItems"
@@ -248,6 +257,18 @@
       v-model="openBudgetModal"
       :budgets="budgets"
       @saved="loadBudgets"
+    />
+
+    <CreditCardModal
+      v-model="openCardModal"
+      :cards="creditCards"
+      @changed="loadInvoices"
+    />
+
+    <InvoiceModal
+      :invoice="invoiceToShow"
+      @close="invoiceToShow = null"
+      @paid="onInvoicePaid"
     />
 
     <Modal v-model="openModal" title="Novo Lançamento">
@@ -316,6 +337,14 @@ import { BudgetService } from '../../budget/services/budgetService';
 import type { BudgetDTO } from '../../budget/dto/BudgetDTO';
 import { buildBudgetProgress } from '../utils/budgetProgress';
 import MonthlyEvolutionCard from '../components/MonthlyEvolutionCard.vue';
+import CreditCardInvoicesCard from '../components/CreditCardInvoicesCard.vue';
+import CreditCardModal from '../components/CreditCardModal.vue';
+import InvoiceModal from '../components/InvoiceModal.vue';
+import { CreditCardService } from '../../creditCard/services/creditCardService';
+import type {
+  CreditCardDTO,
+  InvoiceDTO,
+} from '../../creditCard/dto/CreditCardDTO';
 import {
   buildMonthlyTotals,
   type MonthTotals,
@@ -366,6 +395,14 @@ const budgetItems = computed(() =>
   buildBudgetProgress(budgets.value, expenses.value),
 );
 
+const creditCardService = new CreditCardService();
+const creditCards = ref<CreditCardDTO[]>([]);
+const invoices = ref<InvoiceDTO[]>([]);
+const loadingInvoices = ref(true);
+const openCardModal = ref(false);
+const invoiceToShow = ref<InvoiceDTO | null>(null);
+let invoicesRequest = 0;
+
 const isCurrentMonth = computed(() =>
   isSameMonth(selectedMonth.value, new Date()),
 );
@@ -404,6 +441,33 @@ async function loadBudgets() {
   } finally {
     loadingBudgets.value = false;
   }
+}
+
+async function loadInvoices() {
+  const request = ++invoicesRequest;
+  const month = monthKey(selectedMonth.value);
+  loadingInvoices.value = true;
+  try {
+    const cards = await creditCardService.list();
+    const monthInvoices = await Promise.all(
+      cards.map(card => creditCardService.getInvoice(card.id, month)),
+    );
+    if (request !== invoicesRequest) return;
+    creditCards.value = cards;
+    invoices.value = monthInvoices;
+  } catch (err) {
+    if (request === invoicesRequest)
+      toast.fromError(err, 'Erro ao carregar as faturas.');
+  } finally {
+    if (request === invoicesRequest) loadingInvoices.value = false;
+  }
+}
+
+function onInvoicePaid(paid: InvoiceDTO) {
+  invoiceToShow.value = paid;
+  invoices.value = invoices.value.map(invoice =>
+    invoice.creditCard.id === paid.creditCard.id ? paid : invoice,
+  );
 }
 
 onBeforeMount(() => {
@@ -449,6 +513,7 @@ async function loadEvolution() {
 
 async function loadDashboard() {
   loadEvolution();
+  loadInvoices();
   loading.value = true;
   try {
     const { start, end } = getMonthRange(selectedMonth.value);

@@ -27,10 +27,12 @@ Este repositório é o **front-end** (Vue 3). A API (Node.js, Fastify e PostgreS
 ## Funcionalidades
 
 - **Dashboard mensal**: receitas, despesas e saldo do mês, com navegação entre meses.
-- **Lançamentos parcelados**: no cartão, a compra pode ser dividida em até 12x. O formulário mostra a divisão antes de salvar (ex.: "3x de R$ 400,00"), com a mesma regra de centavos da API.
+- **Data e vencimento conforme a forma de pagamento**: todo lançamento tem a data da compra. Pix, dinheiro, transferência e cartão de débito são à vista e já entram como pagos. Boleto também pede o vencimento, e no cartão de crédito o vencimento vem da fatura.
+- **Lançamentos parcelados**: no cartão de crédito, a compra pode ser dividida em até 12x. O formulário mostra a divisão antes de salvar (ex.: "3x de R$ 400,00"), com a mesma regra de centavos da API.
 - **Gráfico por categoria**: clicar numa fatia (ou na legenda) filtra a lista de lançamentos do mês. Dá para selecionar várias categorias.
 - **Editar e excluir lançamentos** direto da lista.
 - **Orçamento por categoria (opcional)**: limite mensal por categoria, com barra verde, amarela (a partir de 80%) ou vermelha (acima do limite).
+- **Cartão de crédito e fatura**: cadastre os cartões com o dia de fechamento e de vencimento. Ao lançar uma compra no cartão, o formulário mostra em qual fatura ela entra. O painel mostra as faturas do mês (aberta, fechada ou paga) com as compras de cada uma. Pagar a fatura marca as compras como pagas, sem criar outro lançamento, então o gasto não fica duplicado. Compras já registradas podem ser vinculadas a um cartão pela edição.
 - **Conta**: cadastro, login, logout e recuperação de senha com códigos de uso único.
 - **Tema claro e escuro**, seguindo o sistema por padrão.
 - **Responsivo**: funciona no celular sem rolagem horizontal.
@@ -53,13 +55,14 @@ O código é organizado por **módulo** (cada área do app tem suas páginas, co
 src/
 ├── modules/
 │   ├── auth/          # Login, cadastro, recuperação de senha e códigos de recuperação
-│   ├── dashboard/     # Página principal, gráfico, lista, orçamento
+│   ├── dashboard/     # Página principal, gráfico, lista, orçamento, faturas
 │   │   ├── components/
 │   │   ├── pages/
 │   │   └── utils/     # Cálculos do mês e do orçamento (funções puras)
 │   ├── expense/       # Serviço e tipos de lançamentos
 │   ├── category/      # Serviço e tipos de categorias
-│   └── budget/        # Serviço e tipos de orçamento
+│   ├── budget/        # Serviço e tipos de orçamento
+│   └── creditCard/    # Serviço, tipos e cálculo da fatura de cada compra
 ├── components/        # Componentes reutilizáveis (modal, toasts, formulário de lançamento)
 ├── composables/       # Estado e lógica compartilhada (tema, toasts, sessão, animações)
 ├── shared/            # Sessão, enums e utilitários de data, moeda e cor
