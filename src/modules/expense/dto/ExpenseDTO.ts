@@ -7,6 +7,11 @@ export interface ExpenseCategoryDTO {
   type?: 'income' | 'expense';
 }
 
+export interface ExpenseCreditCardDTO {
+  id: string;
+  name: string;
+}
+
 export interface InstallmentDTO {
   id: string;
   installmentNum: number; // nº da parcela (1, 2, 3…)
@@ -28,6 +33,9 @@ export interface ExpenseDTO {
   categoryId: string;
   category: ExpenseCategoryDTO;
   installments: InstallmentDTO[];
+  creditCardId: string | null;
+  creditCard: ExpenseCreditCardDTO | null;
+  date: string;
   userId: string;
   createdAt: string; // ISO string
   updatedAt: string; // ISO string
@@ -39,7 +47,9 @@ export interface CreateExpensePayload {
   description?: string;
   paymentMethod: PaymentMethod;
   installments: number;
+  date: string;
   firstDueDate?: string; // "YYYY-MM-DD"
+  creditCardId?: string;
 }
 
 export interface UpdateExpensePayload {
@@ -49,7 +59,9 @@ export interface UpdateExpensePayload {
   paymentMethod?: PaymentMethod;
   categoryId?: string;
   installments?: number;
+  date?: string;
   firstDueDate?: string; // "YYYY-MM-DD"
+  creditCardId?: string | null;
 }
 
 export interface SaveExpenseResponse {

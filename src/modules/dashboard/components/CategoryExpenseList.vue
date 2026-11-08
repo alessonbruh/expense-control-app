@@ -52,7 +52,7 @@
             <span v-if="showCategory">{{ row.category }} · </span>
             {{ row.method }}
             <span v-if="row.installment"> · Parcela {{ row.installment }}</span>
-            <span v-if="row.dueDay"> · vence {{ row.dueDay }}</span>
+            <span> · {{ row.when }}</span>
           </p>
         </div>
         <div class="flex shrink-0 items-center gap-1">
@@ -114,7 +114,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ExpenseResponseDTO } from '../../expense/dto/ExpenseResponseDTO';
-import { paymentMethodLabels } from '../../../shared/enums/payment-method';
+import {
+  isImmediatePayment,
+  paymentMethodLabels,
+} from '../../../shared/enums/payment-method';
 import { formatCurrency } from '../../../shared/utils/format';
 import { formatDueDay } from '../../../shared/utils/date';
 import { monthAmount, type ExpenseRow } from '../utils/summarizeMonth';
@@ -129,6 +132,17 @@ const emit = defineEmits<{
   edit: [row: ExpenseRow];
   delete: [row: ExpenseRow];
 }>();
+
+function describeDates(expense: ExpenseResponseDTO): string {
+  const installment = expense.installments[0];
+  if (isImmediatePayment(expense.paymentMethod) || !installment)
+    return `dia ${formatDueDay(expense.date)}`;
+
+  const due = `vence ${formatDueDay(installment.dueDate)}`;
+  return expense.creditCard
+    ? `compra ${formatDueDay(expense.date)} · ${due}`
+    : due;
+}
 
 // Só despesas: é o que o gráfico ao lado mostra
 const rows = computed(() =>
@@ -145,7 +159,9 @@ const rows = computed(() =>
         id: expense.id,
         description: expense.description,
         category: expense.category.name,
-        method: paymentMethodLabels[expense.paymentMethod] ?? '',
+        method: expense.creditCard
+          ? `Cartão ${expense.creditCard.name}`
+          : (paymentMethodLabels[expense.paymentMethod] ?? ''),
         amount: monthAmount(expense),
         totalInstallments: installment?.totalInstallments ?? 1,
         // Compra parcelada: mostra qual parcela vence neste mês (ex.: 2/5)
@@ -154,7 +170,7 @@ const rows = computed(() =>
             ? `${installment.installmentNum}/${installment.totalInstallments}`
             : null,
         dueDate: installment?.dueDate ?? '',
-        dueDay: installment ? formatDueDay(installment.dueDate) : null,
+        when: describeDates(expense),
       };
     })
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
